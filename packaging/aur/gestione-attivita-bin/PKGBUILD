@@ -8,8 +8,10 @@ pkgdesc='Windows-style task manager for KDE Plasma, with Ctrl+Alt+Del and Ctrl+S
 arch=('x86_64')
 url='https://github.com/giannoccarol/Activity-manager-linux'
 license=('GPL-3.0-or-later')
-depends=('cairo' 'curl' 'dbus' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk3' 'libayatana-appindicator'
-         'libgcc' 'libnotify' 'libsoup3' 'wayland' 'webkit2gtk-4.1')
+# libayatana-appindicator is loaded at run time (tray icon); libnotify (notify-send) and curl (update
+# check) are run as commands
+depends=('cairo' 'curl' 'dbus' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk3' 'hicolor-icon-theme'
+         'libayatana-appindicator' 'libgcc' 'libnotify' 'libsoup3' 'wayland' 'webkit2gtk-4.1')
 optdepends=('docker: containers on the Processes page'
             'podman: containers on the Processes page'
             'konsole: terminal for container logs and shells'
@@ -19,13 +21,13 @@ optdepends=('docker: containers on the Processes page'
             'xdg-utils: open file locations and links')
 provides=("$_pkgname")
 conflicts=("$_pkgname")
-options=('!strip')
+options=('!strip' '!debug')
 install="$pkgname.install"
-source=("$url/releases/download/v$pkgver/$_pkgname-$pkgver-linux-x86_64.tar.gz")
-sha256sums=('8193f6844a2320c5a87923824cba10803e65081a8d8c972eab93c8ee667a3da1')
+source_x86_64=("$url/releases/download/v$pkgver/$_pkgname-$pkgver-linux-$CARCH.tar.gz")
+sha256sums_x86_64=('8193f6844a2320c5a87923824cba10803e65081a8d8c972eab93c8ee667a3da1')
 
 package() {
-  cd "$_pkgname-$pkgver-linux-x86_64"
+  cd "$_pkgname-$pkgver-linux-$CARCH"
 
   install -Dm755 "$_pkgname" "$pkgdir/usr/bin/$_pkgname"
   install -Dm644 icon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$_pkgname.svg"
