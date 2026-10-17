@@ -1,0 +1,108 @@
+//! Impostazioni persistenti (~/.config/gestione-attivita/impostazioni.json),
+//! scorciatoie globali di KDE e avvio automatico.
+use crate::util::{config_home, run_status, which};
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Settings {
+    pub theme: String,
+    pub interval_ms: u64,
+    pub alerts: bool,
+    pub tray: bool,
+    pub autostart: bool,
+    pub shortcuts: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings { theme: "graphite".into(), interval_ms: 1000, alerts: true, tray: true, autostart: false, shortcuts: true }
+    }
+}
+
+fn dir() -> PathBuf {
+    config_home().join("gestione-attivita")
+}
+
+impl Settings {
+    pub fn load() -> Self {
+        std::fs::read_to_string(dir().join("impostazioni.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+    }
+
+    pub fn save(&self) {
+        let _ = std::fs::create_dir_all(dir());
+        if let Ok(t) = serde_json::to_string_pretty(self) {
+            let tmp = dir().join("impostazioni.json.tmp");
+            if std::fs::write(&tmp, t).is_ok() {
+                let _ = std::fs::rename(tmp, dir().join("impostazioni.json"));
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ scorciatoie (kglobalaccel)
+
+const CAD: u32 = 218103815; // Ctrl+Alt+Canc (codice Qt)
+const CSE: u32 = 117440512; // Ctrl+Maiusc+Esc
+const LAUNCH: [&str; 4] = ["gestione-attivita.desktop", "_launch", "Gestione attività", "Gestione attività"];
+const SECURE: [&str; 4] = ["gestione-attivita-sicurezza.desktop", "_launch", "Schermata Ctrl+Alt+Canc", "Schermata Ctrl+Alt+Canc"];
+const LOGOUT: [&str; 4] = ["ksmserver", "Log Out", "", ""];
+
+fn as_list(v: &[&str]) -> String {
+    format!("[{}]", v.iter().map(|x| format!("'{}'", x.replace('\'', "\\'"))).collect::<Vec<_>>().join(", "))
+}
+
+fn keys(k: &[u32]) -> String {
+    if k.is_empty() {
+        "@a(ai) []".into()
+    } else {
+        format!("[{}]", k.iter().map(|k| format!("([{k}, 0, 0, 0],)")).collect::<Vec<_>>().join(", "))
+    }
+}
+
+fn kga(method: &str, args: &[String]) -> bool {
+    let mut a: Vec<String> = ["call", "--session", "--dest", "org.kde.kglobalaccel", "--object-path", "/kglobalaccel", "--method"].iter().map(|s| s.to_string()).collect();
+    a.push(format!("org.kde.KGlobalAccel.{method}"));
+    a.extend(args.iter().cloned());
+    let refs: Vec<&str> = a.iter().map(|s| s.as_str()).collect();
+    run_status("gdbus", &refs, Duration::from_secs(10)).0
+}
+
+/// Ctrl+Alt+Canc apre la schermata di sicurezza, Ctrl+Maiusc+Esc apre Gestione attività.
+pub fn apply_shortcuts(on: bool) -> bool {
+    if !which("gdbus") {
+        return false;
+    }
+    if on {
+        kga("setForeignShortcutKeys", &[as_list(&LOGOUT), keys(&[])]);
+        let mut ok = true;
+        for (id, k) in [(&SECURE, CAD), (&LAUNCH, CSE)] {
+            kga("doRegister", &[as_list(id)]);
+            ok &= kga("setForeignShortcutKeys", &[as_list(id), keys(&[k])]);
+        }
+        ok
+    } else {
+        for id in [&SECURE, &LAUNCH] {
+            kga("setForeignShortcutKeys", &[as_list(id), keys(&[])]);
+        }
+        kga("setForeignShortcutKeys", &[as_list(&LOGOUT), keys(&[CAD])])
+    }
+}
+
+// ------------------------------------------------------------------ avvio automatico
+
+pub fn apply_autostart(on: bool, exe: &Path) {
+    let f = config_home().join("autostart/gestione-attivita.desktop");
+    if on {
+        let _ = std::fs::create_dir_all(f.parent().unwrap_or(Path::new("/")));
+        let body = format!(
+            "[Desktop Entry]\nType=Application\nName=Gestione attività\nComment=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc\nExec={} --tray\nIcon=gestione-attivita\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
+            exe.display()
+        );
+        let _ = std::fs::write(f, body);
+    } else {
+        let _ = std::fs::remove_file(f);
+    }
+}
