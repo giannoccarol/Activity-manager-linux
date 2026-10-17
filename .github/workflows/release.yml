@@ -1,0 +1,85 @@
+name: Release
+
+# A version tag (v2.3.0) builds the release package and attaches it, with its checksum, to the GitHub
+# release of that tag. The release is created if it does not exist yet; an existing one keeps its
+# title and notes. Pull requests that touch the packaging build the same package without publishing
+# it: download it from the artifacts of the run.
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/release.yml
+      - packaging/**
+      - install.sh
+      - uninstall.sh
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  package:
+    name: Linux x86_64 package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      # the tag being released, empty for pull requests and manual runs
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the version
+        run: packaging/package.sh --check "$TAG"
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libwayland-dev
+
+      # no build caches here: release binaries are always built from scratch
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          package-manager-cache: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: |
+          npm ci
+          npx tauri build
+
+      - name: Package and verify
+        id: package
+        run: packaging/package.sh "$TAG"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: gestione-attivita-${{ steps.package.outputs.version }}-linux-x86_64
+          path: |
+            ${{ steps.package.outputs.tarball }}
+            ${{ steps.package.outputs.tarball }}.sha256
+          if-no-files-found: error
+
+      - name: Publish to the GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.package.outputs.version }}
+          TARBALL: ${{ steps.package.outputs.tarball }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$TARBALL" "$TARBALL.sha256" --clobber
+          else
+            gh release create "$TAG" "$TARBALL" "$TARBALL.sha256" --verify-tag \
+              --title "Activity Manager $VERSION" --generate-notes
+          fi
