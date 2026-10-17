@@ -9,6 +9,7 @@ mod fmt;
 mod i18n;
 mod insights;
 mod model;
+mod sensors;
 mod session;
 mod settings;
 mod update;
@@ -36,6 +37,10 @@ struct AppState {
     resync: Arc<AtomicBool>,
     /// last result of the update check
     update: Arc<Mutex<Option<update::UpdateInfo>>>,
+    /// hardware sensors with statistics since start, sampled by the collector
+    sensors: Arc<Mutex<Vec<sensors::Device>>>,
+    /// set by the Sensors page to reset min/max/average
+    sensors_reset: Arc<AtomicBool>,
 }
 
 // ------------------------------------------------------------------ windows
@@ -304,10 +309,12 @@ fn start_collector(app: &AppHandle, st: &AppState) {
         return;
     }
     let (app, last, iv, settings, history, resync) = (app.clone(), st.last.clone(), st.interval_ms.clone(), st.settings.clone(), st.history.clone(), st.resync.clone());
+    let (sensor_out, sensor_reset) = (st.sensors.clone(), st.sensors_reset.clone());
     std::thread::Builder::new()
         .name("collector".into())
         .spawn(move || {
             let mut c = collect::Collector::new();
+            let mut hw = sensors::Sensors::new();
             let mut sent: HashMap<String, Instant> = HashMap::new();
             let mut prev = Instant::now();
             let mut wired: std::collections::HashSet<(i32, u64)> = std::collections::HashSet::new();
@@ -318,6 +325,13 @@ fn start_collector(app: &AppHandle, st: &AppState) {
                 prev = t0;
                 if let Ok(mut h) = history.lock() {
                     h.record(&snap, dt);
+                }
+                if sensor_reset.swap(false, Ordering::SeqCst) {
+                    hw.reset();
+                }
+                let devices = hw.sample(Some(&snap));
+                if let Ok(mut s) = sensor_out.lock() {
+                    *s = devices;
                 }
                 let win = app.get_webview_window("main");
                 // minimized or hidden: nothing is sent, so the UI does not waste CPU redrawing
@@ -496,6 +510,26 @@ fn open_url(url: String) -> Result<(), String> {
     std::process::Command::new("xdg-open").arg(&url).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
+/// Sensors device by device, with min/max/average since start (or since the last reset).
+#[tauri::command]
+fn sensors(state: State<AppState>) -> Vec<sensors::Device> {
+    state.sensors.lock().map(|s| s.clone()).unwrap_or_default()
+}
+
+#[tauri::command]
+fn sensors_reset(state: State<AppState>) {
+    state.sensors_reset.store(true, Ordering::SeqCst);
+    if let Ok(mut s) = state.sensors.lock() {
+        for d in s.iter_mut() {
+            for r in d.readings.iter_mut() {
+                r.min = r.value;
+                r.max = r.value;
+                r.avg = r.value;
+            }
+        }
+    }
+}
+
 #[tauri::command]
 fn app_version() -> String {
     update::current_version()
@@ -611,6 +645,17 @@ pub fn shortcuts(on: bool) -> bool {
     settings::apply_shortcuts(on)
 }
 
+/// Prints the sensors as JSON (diagnostics: `gestione-attivita --sensors`).
+pub fn dump_sensors() {
+    i18n::set(&Settings::load().language);
+    let mut c = collect::Collector::new();
+    let mut hw = sensors::Sensors::new();
+    c.collect();
+    std::thread::sleep(Duration::from_millis(1000));
+    let snap = c.collect();
+    println!("{}", serde_json::to_string_pretty(&hw.sample(Some(&snap))).unwrap_or_default());
+}
+
 /// Version of this build (`gestione-attivita --version`).
 pub fn version() -> String {
     update::current_version()
@@ -649,6 +694,8 @@ pub fn run() {
         secure_only: AtomicBool::new(secure),
         resync: Arc::new(AtomicBool::new(true)),
         update: Arc::new(Mutex::new(None)),
+        sensors: Arc::new(Mutex::new(vec![])),
+        sensors_reset: Arc::new(AtomicBool::new(false)),
     };
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
@@ -726,6 +773,8 @@ pub fn run() {
             system_lang,
             app_version,
             open_url,
+            sensors,
+            sensors_reset,
             check_update,
             install_update,
             session,

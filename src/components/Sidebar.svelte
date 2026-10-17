@@ -9,6 +9,7 @@
   const NAV: [Page, string][] = [
     ["processes", "processes"],
     ["performance", "performance"],
+    ["sensors", "thermometer"],
     ["history", "history"],
     ["startup", "startup"],
     ["network", "network"],

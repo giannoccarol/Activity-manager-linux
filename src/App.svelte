@@ -12,6 +12,7 @@
   import TopBar from "./components/TopBar.svelte";
   import Processes from "./pages/Processes.svelte";
   import Performance from "./pages/Performance.svelte";
+  import Sensors from "./pages/Sensors.svelte";
   import SettingsPage from "./pages/Settings.svelte";
   import History from "./pages/History.svelte";
   import Startup from "./pages/Startup.svelte";
@@ -28,6 +29,7 @@
   const TITLES: Record<Page, string> = {
     processes: "nav.processes",
     performance: "nav.performance",
+    sensors: "nav.sensors",
     history: "nav.history",
     startup: "nav.startup",
     network: "nav.network",
@@ -123,6 +125,8 @@
         <div class="view view-in">
         {#if app.page === "settings"}
           <SettingsPage />
+        {:else if app.page === "sensors"}
+          <Sensors />
         {:else if app.page === "history"}
           <History />
         {:else if app.page === "startup"}

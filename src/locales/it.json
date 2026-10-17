@@ -172,7 +172,8 @@
     "services": "Servizi",
     "settings": "Impostazioni",
     "startup": "App di avvio",
-    "users": "Utenti"
+    "users": "Utenti",
+    "sensors": "Sensori"
   },
   "network": {
     "app": "App",
@@ -629,6 +630,61 @@
       "notifyTitle": "Gestione attività {version} è disponibile",
       "notifyBody": "Apri le Impostazioni per vedere le novità e aggiornare.",
       "notifyAction": "Dettagli"
+    },
+    "sensors": {
+      "cpu": "Processore",
+      "gpu": "Scheda video",
+      "memory": "Memoria",
+      "memoryKind": "Memoria {kind}",
+      "wifi": "Scheda Wi-Fi",
+      "thinkpadEc": "Controller ThinkPad (EC)",
+      "acpi": "Sensori ACPI",
+      "battery": "Batteria",
+      "batteryNamed": "Batteria {name}",
+      "package": "Pacchetto CPU",
+      "pcore": "P-core {n}",
+      "ecore": "E-core {n}",
+      "core": "Core {n}",
+      "logical": "CPU {list}",
+      "composite": "Complessiva",
+      "sensor": "Sensore {n}",
+      "dimm": "Modulo {n}",
+      "address": "indirizzo {addr}",
+      "zone": "Zona {n}",
+      "zoneCpu": "CPU",
+      "zoneCpuPci": "CPU (PCI)",
+      "temperature": "Temperatura",
+      "fan": "Ventola {n}",
+      "voltage": "Tensione {n}",
+      "current": "Corrente {n}",
+      "power": "Potenza",
+      "usage": "Utilizzo",
+      "gpuMemory": "Memoria usata",
+      "suspended": "In sospensione: non viene svegliata per leggerne i sensori",
+      "charging": "In carica",
+      "discharging": "In uso a batteria",
+      "full": "Carica",
+      "notCharging": "Collegata, non in carica",
+      "charge": "Carica",
+      "batteryVoltage": "Tensione",
+      "batteryPower": "Potenza",
+      "energy": "Energia",
+      "wear": "Usura",
+      "cycles": "Cicli di carica"
     }
+  },
+  "sensors": {
+    "note": "Valori dall'avvio dell'app: minimo, massimo e media.",
+    "hottest": "Il più caldo: {name}, {device}, {value}",
+    "reset": "Azzera minimi e massimi",
+    "cols": {
+      "sensor": "Sensore",
+      "current": "Attuale",
+      "min": "Minimo",
+      "max": "Massimo",
+      "avg": "Media"
+    },
+    "empty": "Nessun sensore leggibile su questo computer.",
+    "loading": "Leggo i sensori…"
   }
 }

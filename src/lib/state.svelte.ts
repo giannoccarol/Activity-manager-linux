@@ -6,7 +6,7 @@ import type { Proc, Snapshot } from "./types";
 export type Sample = [number, number];
 const KEEP = 130; // ~2 minutes of samples
 
-export type Page = "processes" | "performance" | "history" | "startup" | "network" | "users" | "details" | "services" | "settings";
+export type Page = "processes" | "performance" | "sensors" | "history" | "startup" | "network" | "users" | "details" | "services" | "settings";
 
 type Static = Pick<Proc, "name" | "icon" | "user" | "exe" | "cmd">;
 

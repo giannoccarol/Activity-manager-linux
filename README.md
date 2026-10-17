@@ -55,6 +55,10 @@ Activity Manager puts everything into a familiar window, reads the data straight
 - The NVIDIA GPU of hybrid laptops is **never woken up** just to read its state.
 - For each resource, the list of who is using it.
 
+**Sensors, like HWiNFO**
+- Every sensor of the PC, device by device: CPU package and each core (P-cores and E-cores with their logical CPUs), per-core clocks, GPUs, memory modules, NVMe drives, Wi-Fi card, embedded controller and fans, ACPI thermal zones, battery (voltage, power, wear level, charge cycles).
+- Current value, minimum, maximum and average since the app started, with a reset button, warning colors near the limits and a chart for the selected sensor.
+
 **The other pages, as on Windows**
 - **App history**: CPU time, disk, GPU and peak memory per app, for today, the last 7 days or the last 30 days (local SQLite).
 - **Startup apps**: enable and disable the apps that start at login, the same way KDE System Settings does.
@@ -101,8 +105,10 @@ The screenshots use demo data.
 | **Services** | **Startup apps** |
 | ![Details](docs/screenshots/details.png) | ![Users](docs/screenshots/users.png) |
 | **Details** | **Users** |
-| ![Settings](docs/screenshots/settings.png) | ![Performance](docs/screenshots/performance.png) |
-| **Settings** | **Performance**, Graphite theme |
+| ![Sensors](docs/screenshots/sensors.png) | ![Performance](docs/screenshots/performance.png) |
+| **Sensors** | **Performance**, Graphite theme |
+| ![Settings](docs/screenshots/settings.png) | |
+| **Settings** | |
 
 ## Requirements
 
@@ -144,8 +150,8 @@ Updates come from pacman or your AUR helper: the app only tells you when a new v
 Release packages are built by GitHub Actions on Ubuntu 24.04 (x86_64) and need glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
 ```bash
-tar xf gestione-attivita-2.2.0-linux-x86_64.tar.gz
-cd gestione-attivita-2.2.0-linux-x86_64
+tar xf gestione-attivita-2.3.0-linux-x86_64.tar.gz
+cd gestione-attivita-2.3.0-linux-x86_64
 ./install.sh
 ```
 
@@ -223,6 +229,7 @@ Useful command line options:
 | `--tray` | start hidden in the system tray |
 | `--secure` | open the Ctrl+Alt+Del screen |
 | `--dump` | print a JSON snapshot of the data and exit |
+| `--sensors` | print every sensor, device by device, as JSON |
 | `--bench` | measure smoothness, page switching, search, scrolling and CPU usage; results in `~/.cache/gestione-attivita/bench.txt` |
 | `--apply-shortcuts`, `--remove-shortcuts` | assign or remove the KDE shortcuts |
 | `--version` | print the version |
@@ -245,6 +252,7 @@ src-tauri/src/
   session.rs         lock, switch user, sign out, power
   settings.rs        settings, KDE shortcuts, autostart
   update.rs          update check, download, checksum, installation
+  sensors.rs         hardware sensors device by device, min/max/average
 packaging/           release package (package.sh, verify.sh, README.txt) and the AUR package
 ```
 

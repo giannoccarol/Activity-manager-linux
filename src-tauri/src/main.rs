@@ -23,6 +23,9 @@ fn main() {
             std::process::exit(gestione_attivita_lib::update_cli(install));
         }
     }
+    if std::env::args().any(|a| a == "--sensors") {
+        return gestione_attivita_lib::dump_sensors();
+    }
     if std::env::args().any(|a| a == "--dump") {
         return gestione_attivita_lib::dump();
     }
