@@ -18,7 +18,7 @@ export type Props = {
   group: string | null;
   unit: string | null;
 };
-export type Dialog = { kind: "run" } | { kind: "props"; data: Props } | null;
+export type Dialog = { kind: "run" } | { kind: "props"; data: Props } | { kind: "notes" } | null;
 
 class Ui {
   toasts = $state<Toast[]>([]);

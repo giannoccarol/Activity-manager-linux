@@ -6,6 +6,8 @@
   import { ui } from "./lib/ui.svelte";
   import { enterOn } from "./lib/motion.svelte";
   import { applyLanguage, i18n, t } from "./lib/i18n.svelte";
+  import { updates } from "./lib/update.svelte";
+  import NotesDialog from "./components/NotesDialog.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TopBar from "./components/TopBar.svelte";
   import Processes from "./pages/Processes.svelte";
@@ -40,6 +42,9 @@
 
   onMount(() => {
     const q = new URLSearchParams(location.search);
+    if (view !== "secure") updates.init();
+    // browser preview only: ?update=1 simulates a new version, ?notes=1 also opens its notes
+    if (!isTauri && q.get("update")) updates.check().then(() => q.get("notes") && (ui.dialog = { kind: "notes" }));
     settings.init().then(() => {
       const t = q.get("theme");
       if (t === "paper" || t === "glass" || t === "graphite") settings.v.theme = t;
@@ -145,7 +150,7 @@
       </div>
     </main>
   </div>
-  {#if ui.dialog?.kind === "run"}<RunDialog />{:else if ui.dialog?.kind === "props"}<PropsDialog data={ui.dialog.data} />{/if}
+  {#if ui.dialog?.kind === "run"}<RunDialog />{:else if ui.dialog?.kind === "props"}<PropsDialog data={ui.dialog.data} />{:else if ui.dialog?.kind === "notes"}<NotesDialog />{/if}
   <Toasts />
 {/if}
 

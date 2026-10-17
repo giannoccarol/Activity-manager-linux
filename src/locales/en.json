@@ -81,6 +81,11 @@
       "placeholder": "e.g. dolphin, konsole, firefox --private-window",
       "run": "Run",
       "title": "Create new task"
+    },
+    "notes": {
+      "title": "What's new in {version}",
+      "published": "Released on {date}",
+      "github": "Open on GitHub"
     }
   },
   "format": {
@@ -307,7 +312,7 @@
     "stop": "Stop"
   },
   "settings": {
-    "about": "Activity Manager 2.0, written in Rust with Tauri. It reads data straight from the kernel, with no extra services.",
+    "about": "{name} {version}, written in Rust with Tauri. It reads data straight from the kernel, with no extra services.",
     "alerts": {
       "desc": "A notification when disk, memory, CPU or temperature max out, with the reason and the app responsible.",
       "label": "Alert me when something hits its limit",
@@ -363,6 +368,25 @@
     "tray": {
       "desc": "When you close the window, the app keeps watching the system and reopens instantly.",
       "label": "Keep running in the system tray"
+    },
+    "updates": {
+      "title": "Updates",
+      "version": "{name} {version}",
+      "upToDate": "This is the latest version.",
+      "checkedAt": "Checked at {time}.",
+      "never": "Not checked yet.",
+      "checking": "Checking…",
+      "check": "Check now",
+      "available": "Version {version} is available, released on {date}.",
+      "notes": "What's new",
+      "install": "Update now",
+      "skip": "Skip this version",
+      "downloading": "Downloading {pct}%…",
+      "verifying": "Verifying the package…",
+      "installing": "Installing: the app will restart in a moment…",
+      "auto": "Check for updates automatically",
+      "autoDesc": "At startup and once a day, only to GitHub: no other data is sent.",
+      "dot": "Update available"
     }
   },
   "startup": {
@@ -403,7 +427,8 @@
     "propsOnlyInApp": "Properties are only available in the app",
     "started": "Started {cmd}",
     "startupOff": "{name} will no longer start at sign-in",
-    "startupOn": "{name} will start at sign-in"
+    "startupOn": "{name} will start at sign-in",
+    "updateAvailable": "{name} {version} is available: see Settings."
   },
   "topbar": {
     "clearSearch": "Clear search",
@@ -582,6 +607,28 @@
       "nvme": "NVMe SSD",
       "hdd": "Hard disk",
       "ssd": "SSD"
+    },
+    "update": {
+      "packageManaged": "This copy is installed by the package manager: update it from there.",
+      "devBuild": "Development build: automatic updates only work for the app installed with install.sh.",
+      "noCurl": "curl is needed to check for updates.",
+      "unreachable": "GitHub is not responding: check your connection and try again.",
+      "badResponse": "Invalid response from GitHub.",
+      "noAsset": "This version has no package for this computer.",
+      "downloadFailed": "Download failed: check your connection and try again.",
+      "checksum": "The downloaded package does not match the published checksum: update cancelled.",
+      "badPackage": "The downloaded package is incomplete: update cancelled.",
+      "wontStart": "Version {version} does not start on this system: update cancelled, the current version stays.",
+      "upToDate": "You already have the latest version.",
+      "downloading": "Downloading…",
+      "verifying": "Verifying the package…",
+      "installing": "Installing…",
+      "cliUpToDate": "Activity Manager {version} is up to date.",
+      "cliAvailable": "Version {version} is available (installed: {current}).",
+      "cliStarted": "Installing {version}: the app restarts by itself.",
+      "notifyTitle": "Activity Manager {version} is available",
+      "notifyBody": "Open Settings to see what's new and update.",
+      "notifyAction": "Details"
     }
   }
 }

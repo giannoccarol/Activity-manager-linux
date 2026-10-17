@@ -5,6 +5,10 @@
 # History and settings are kept. A previous Python version, if any, is moved to the trash.
 set -euo pipefail
 
+# GA_UPDATE=show|tray: run by the app's updater. Settings, shortcuts and autostart are left as the
+# user set them, and the new version is started the way the old one was (window open or in the tray).
+UPDATE="${GA_UPDATE:-}"
+
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -87,6 +91,8 @@ DESKTOP
 update-desktop-database "$APPS" >/dev/null 2>&1 || true
 kbuildsycoca6 >/dev/null 2>&1 || true
 
+if [ -z "$UPDATE" ]; then
+# first installation only (skipped by the updater)
 echo "→ Start at login, in the system tray (so Ctrl+Alt+Del responds instantly)…"
 mkdir -p "$CONF/autostart" "$CONF/gestione-attivita"
 cat > "$CONF/autostart/gestione-attivita.desktop" <<DESKTOP
@@ -137,9 +143,15 @@ if [ ${#old[@]} -gt 0 ]; then
         echo "  Moved to $DEST/old-python-version"
     fi
 fi
+fi
 
-echo "→ Starting in the system tray…"
-setsid "$DEST/bin/gestione-attivita" --tray >/dev/null 2>&1 < /dev/null &
+if [ "$UPDATE" = "show" ]; then
+    echo "→ Starting…"
+    setsid "$DEST/bin/gestione-attivita" >/dev/null 2>&1 < /dev/null &
+else
+    echo "→ Starting in the system tray…"
+    setsid "$DEST/bin/gestione-attivita" --tray >/dev/null 2>&1 < /dev/null &
+fi
 
 echo
 echo "Installed. Press Ctrl+Alt+Del or Ctrl+Shift+Esc."

@@ -1,7 +1,7 @@
 {
   "name": "gestione-attivita",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Windows-style task manager for Linux and KDE Plasma (Rust + Tauri + Svelte)",
   "license": "GPL-3.0-or-later",
   "repository": {

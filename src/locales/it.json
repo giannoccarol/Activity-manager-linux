@@ -81,6 +81,11 @@
       "placeholder": "es. dolphin, konsole, firefox --private-window",
       "run": "Esegui",
       "title": "Nuova attività"
+    },
+    "notes": {
+      "title": "Novità della versione {version}",
+      "published": "Pubblicata il {date}",
+      "github": "Apri su GitHub"
     }
   },
   "format": {
@@ -307,7 +312,7 @@
     "stop": "Arresta"
   },
   "settings": {
-    "about": "Gestione attività 2.0, scritta in Rust con Tauri. Legge i dati direttamente dal kernel, senza servizi aggiuntivi.",
+    "about": "{name} {version}, scritta in Rust con Tauri. Legge i dati direttamente dal kernel, senza servizi aggiuntivi.",
     "alerts": {
       "desc": "Una notifica quando disco, memoria, CPU o temperatura sono al massimo, con il motivo e l'app responsabile.",
       "label": "Avvisami quando qualcosa è al limite",
@@ -363,6 +368,25 @@
     "tray": {
       "desc": "Chiudendo la finestra l'app continua a sorvegliare il sistema e si riapre all'istante.",
       "label": "Resta nella barra di sistema"
+    },
+    "updates": {
+      "title": "Aggiornamenti",
+      "version": "{name} {version}",
+      "upToDate": "È l'ultima versione.",
+      "checkedAt": "Controllato alle {time}.",
+      "never": "Non ancora controllato.",
+      "checking": "Controllo…",
+      "check": "Controlla ora",
+      "available": "È disponibile la versione {version}, pubblicata il {date}.",
+      "notes": "Novità",
+      "install": "Aggiorna ora",
+      "skip": "Ignora questa versione",
+      "downloading": "Download {pct}%…",
+      "verifying": "Verifica del pacchetto…",
+      "installing": "Installazione: l'app si riavvia tra un attimo…",
+      "auto": "Controlla gli aggiornamenti automaticamente",
+      "autoDesc": "All'avvio e una volta al giorno, solo verso GitHub: nessun altro dato viene inviato.",
+      "dot": "Aggiornamento disponibile"
     }
   },
   "startup": {
@@ -403,7 +427,8 @@
     "propsOnlyInApp": "Le proprietà sono disponibili solo nell'app",
     "started": "Avviato {cmd}",
     "startupOff": "{name} non partirà più all'accesso",
-    "startupOn": "{name} partirà all'accesso"
+    "startupOn": "{name} partirà all'accesso",
+    "updateAvailable": "{name} {version} è disponibile: la trovi nelle Impostazioni."
   },
   "topbar": {
     "clearSearch": "Cancella ricerca",
@@ -582,6 +607,28 @@
       "nvme": "SSD NVMe",
       "hdd": "Disco rigido",
       "ssd": "SSD"
+    },
+    "update": {
+      "packageManaged": "Questa copia è installata dal gestore di pacchetti: aggiornala da lì.",
+      "devBuild": "Versione di sviluppo: gli aggiornamenti automatici funzionano solo sull'app installata con install.sh.",
+      "noCurl": "Per controllare gli aggiornamenti serve curl.",
+      "unreachable": "GitHub non risponde: controlla la connessione e riprova.",
+      "badResponse": "Risposta di GitHub non valida.",
+      "noAsset": "Questa versione non ha un pacchetto per questo computer.",
+      "downloadFailed": "Download non riuscito: controlla la connessione e riprova.",
+      "checksum": "Il pacchetto scaricato non corrisponde al checksum pubblicato: aggiornamento annullato.",
+      "badPackage": "Il pacchetto scaricato è incompleto: aggiornamento annullato.",
+      "wontStart": "La versione {version} non parte su questo sistema: aggiornamento annullato, resta quella attuale.",
+      "upToDate": "Hai già l'ultima versione.",
+      "downloading": "Download…",
+      "verifying": "Verifica del pacchetto…",
+      "installing": "Installazione…",
+      "cliUpToDate": "Gestione attività {version} è aggiornata.",
+      "cliAvailable": "È disponibile la versione {version} (installata: {current}).",
+      "cliStarted": "Installazione della {version} avviata: l'app si riavvia da sola.",
+      "notifyTitle": "Gestione attività {version} è disponibile",
+      "notifyBody": "Apri le Impostazioni per vedere le novità e aggiornare.",
+      "notifyAction": "Dettagli"
     }
   }
 }

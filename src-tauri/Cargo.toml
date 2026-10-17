@@ -1,6 +1,6 @@
 [package]
 name = "gestione-attivita"
-version = "2.1.0"
+version = "2.2.0"
 description = "Windows-style task manager for Linux and KDE Plasma"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/giannoccarol/Activity-manager-linux"
@@ -28,6 +28,7 @@ wayland-protocols = { version = "0.32", features = ["client", "staging"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 libc = "0.2"
+sha2 = "0.10"
 
 [profile.release]
 opt-level = 3

@@ -12,9 +12,11 @@ export type Settings = {
   autostart: boolean;
   shortcuts: boolean;
   language: LangPref;
+  updates: boolean;
+  skipVersion: string;
 };
 
-const DEFAULTS: Settings = { theme: "graphite", intervalMs: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto" };
+const DEFAULTS: Settings = { theme: "graphite", intervalMs: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto", updates: true, skipVersion: "" };
 
 function storedTheme(): Theme | null {
   try {
