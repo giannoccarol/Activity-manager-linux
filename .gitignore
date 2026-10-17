@@ -7,3 +7,8 @@ dist/
 public/mock-icons/*
 !public/mock-icons/app.svg
 !public/mock-icons/terminal.svg
+
+# AUR package builds (makepkg in packaging/aur/*)
+packaging/aur/*/src/
+packaging/aur/*/pkg/
+packaging/aur/*/*.tar.*

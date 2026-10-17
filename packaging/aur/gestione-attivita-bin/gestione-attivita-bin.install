@@ -1,0 +1,31 @@
+post_install() {
+  cat <<'EOF'
+==> Activity Manager (Gestione attività)
+    To use Ctrl+Alt+Del and Ctrl+Shift+Esc, run once as your user (not as root):
+        gestione-attivita --apply-shortcuts
+    Ctrl+Alt+Del is taken from KDE's "Log Out"; --remove-shortcuts gives it back.
+    For Ctrl+Alt+Del to respond instantly, turn on "Start at login" in Settings.
+
+    Updates come from this package (pacman or your AUR helper): the app only
+    tells you when a new version is out.
+
+    Installed it before with install.sh? Run that package's ./uninstall.sh, then
+    the command above: otherwise its copy in ~/.local/bin and its menu entries
+    take precedence over this package.
+EOF
+}
+
+post_upgrade() {
+  cat <<'EOF'
+==> Activity Manager: quit it from the tray icon and open it again to use the new version.
+EOF
+}
+
+post_remove() {
+  cat <<'EOF'
+==> Activity Manager removed. If you had applied its shortcuts, give Ctrl+Alt+Del back to
+    "Log Out" in System Settings > Keyboard > Shortcuts, and remove
+    ~/.config/autostart/gestione-attivita.desktop if you had turned on "Start at login".
+    Settings and history stay in ~/.config/gestione-attivita and ~/.local/share/gestione-attivita.
+EOF
+}
