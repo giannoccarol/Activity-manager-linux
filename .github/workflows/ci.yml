@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libwayland-dev
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Interface
+        run: |
+          npm ci
+          npx vite build
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # the backend embeds the interface built above (../dist)
+      - name: Backend
+        working-directory: src-tauri
+        run: cargo build --locked
+
+  aur:
+    name: AUR package
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v7
+
+      # builds the PKGBUILD against the GitHub release it points to, and checks it with namcap
+      - name: Build and check
+        run: |
+          cd packaging/aur/gestione-attivita-bin
+          pacman -Syu --noconfirm --needed namcap $(sed -n 's/^\tdepends = //p' .SRCINFO)
+          useradd -m builder
+          cp -r . /home/builder/pkg
+          chown -R builder: /home/builder/pkg
+          cd /home/builder/pkg
+          runuser -u builder -- makepkg --printsrcinfo | diff -u .SRCINFO - \
+            || { echo "::error::.SRCINFO is out of date: run makepkg --printsrcinfo > .SRCINFO"; exit 1; }
+          runuser -u builder -- makepkg --noconfirm
+          namcap PKGBUILD
+          namcap ./*.pkg.tar.zst
+          tar -tvf ./*.pkg.tar.zst

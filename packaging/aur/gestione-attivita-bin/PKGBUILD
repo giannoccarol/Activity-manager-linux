@@ -1,0 +1,67 @@
+# Maintainer: Lorenzo Giannoccaro <93546162+giannoccarol@users.noreply.github.com>
+
+pkgname=gestione-attivita-bin
+_pkgname=gestione-attivita
+pkgver=2.2.0
+pkgrel=1
+pkgdesc='Windows-style task manager for KDE Plasma, with Ctrl+Alt+Del and Ctrl+Shift+Esc'
+arch=('x86_64')
+url='https://github.com/giannoccarol/Activity-manager-linux'
+license=('GPL-3.0-or-later')
+depends=('cairo' 'curl' 'dbus' 'gdk-pixbuf2' 'glib2' 'glibc' 'gtk3' 'libayatana-appindicator'
+         'libgcc' 'libnotify' 'libsoup3' 'wayland' 'webkit2gtk-4.1')
+optdepends=('docker: containers on the Processes page'
+            'podman: containers on the Processes page'
+            'konsole: terminal for container logs and shells'
+            'networkmanager: Wi-Fi network names on the Performance page'
+            'nvidia-utils: NVIDIA GPU data'
+            'polkit: end processes owned by other users'
+            'xdg-utils: open file locations and links')
+provides=("$_pkgname")
+conflicts=("$_pkgname")
+options=('!strip')
+install="$pkgname.install"
+source=("$url/releases/download/v$pkgver/$_pkgname-$pkgver-linux-x86_64.tar.gz")
+sha256sums=('8193f6844a2320c5a87923824cba10803e65081a8d8c972eab93c8ee667a3da1')
+
+package() {
+  cd "$_pkgname-$pkgver-linux-x86_64"
+
+  install -Dm755 "$_pkgname" "$pkgdir/usr/bin/$_pkgname"
+  install -Dm644 icon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$_pkgname.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # the same menu entries as install.sh: KDE ties the shortcuts to these file names
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/$_pkgname.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Activity Manager
+Name[it]=Gestione attività
+GenericName=Task Manager
+GenericName[it]=Gestione attività
+Comment=Processes, performance, app history, network, startup apps, users and services
+Comment[it]=Processi, prestazioni, cronologia, rete, app di avvio, utenti e servizi
+Exec=/usr/bin/gestione-attivita
+Icon=gestione-attivita
+Terminal=false
+Categories=System;Monitor;
+Keywords=task;manager;taskmgr;processi;prestazioni;servizi;rete;
+StartupNotify=true
+StartupWMClass=gestione-attivita
+X-KDE-Shortcuts=Ctrl+Shift+Esc
+EOF
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/$_pkgname-sicurezza.desktop" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Ctrl+Alt+Del screen
+Name[it]=Schermata Ctrl+Alt+Canc
+Comment=Lock, switch user, sign out or open the task manager
+Comment[it]=Blocca, cambia utente, esci o apri Gestione attività
+Exec=/usr/bin/gestione-attivita --secure
+Icon=gestione-attivita
+Terminal=false
+NoDisplay=true
+StartupNotify=false
+X-KDE-Shortcuts=Ctrl+Alt+Del
+EOF
+}

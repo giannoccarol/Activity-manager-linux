@@ -119,9 +119,29 @@ Optional: `docker` or `podman` for containers, `nvidia-utils` for NVIDIA GPU dat
 
 ## Installation
 
+### Arch Linux / CachyOS (AUR)
+
+The `gestione-attivita-bin` package installs the release binary system-wide (`/usr/bin`), with the menu entries and the icon. Its [PKGBUILD](packaging/aur/gestione-attivita-bin/PKGBUILD) is ready to be submitted to the AUR; until it is published there, build it from this repository:
+
+```bash
+git clone https://github.com/giannoccarol/Activity-manager-linux.git
+cd Activity-manager-linux/packaging/aur/gestione-attivita-bin
+makepkg -si
+```
+
+Once it is on the AUR, `paru -S gestione-attivita-bin` or `yay -S gestione-attivita-bin` does the same.
+
+Then, as your user, assign the Ctrl+Alt+Del and Ctrl+Shift+Esc shortcuts, and turn on **Start at login** in Settings so Ctrl+Alt+Del responds instantly:
+
+```bash
+gestione-attivita --apply-shortcuts
+```
+
+Updates come from pacman or your AUR helper: the app only tells you when a new version is out. If you installed it before with `install.sh`, run `./uninstall.sh` from that package first.
+
 ### From the release
 
-The release binary is built on Arch Linux (x86_64) and needs glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
+Release packages are built by GitHub Actions on Ubuntu 24.04 (x86_64) and need glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
 ```bash
 tar xf gestione-attivita-2.2.0-linux-x86_64.tar.gz
@@ -149,7 +169,7 @@ npx tauri build
 
 ### Updating
 
-The app updates itself from **Settings → Updates**, or run `gestione-attivita --update`. Installing a newer package with `./install.sh` works too.
+The app updates itself from **Settings → Updates**, or run `gestione-attivita --update`. Installing a newer package with `./install.sh` works too. The AUR package is updated by pacman or your AUR helper.
 
 ### Uninstall
 
@@ -158,6 +178,8 @@ The app updates itself from **Settings → Updates**, or run `gestione-attivita 
 ```
 
 It gives Ctrl+Alt+Del back to KDE's "Log Out". History and settings stay in `~/.local/share/gestione-attivita` and `~/.config/gestione-attivita`.
+
+With the AUR package, run `gestione-attivita --remove-shortcuts` as your user first, then `sudo pacman -R gestione-attivita-bin`.
 
 ## How it works
 
@@ -223,7 +245,12 @@ src-tauri/src/
   session.rs         lock, switch user, sign out, power
   settings.rs        settings, KDE shortcuts, autostart
   update.rs          update check, download, checksum, installation
+packaging/           release package (package.sh, verify.sh, README.txt) and the AUR package
 ```
+
+### Releases
+
+Release packages are built by GitHub Actions. Pushing a tag `vX.Y.Z` runs [`release.yml`](.github/workflows/release.yml): it checks that the tag matches the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, builds on Ubuntu 24.04, assembles the package with `packaging/package.sh`, checks it the way the in-app updater will (`packaging/verify.sh`: checksum file, layout, `--version`) and attaches it with its `.sha256` to the GitHub release of the tag, creating the release if needed. Every push and pull request is built by [`ci.yml`](.github/workflows/ci.yml), which also builds the AUR package and checks it with namcap. Updating the AUR package after a release is described in [packaging/aur](packaging/aur/README.md).
 
 ## Privacy
 
