@@ -105,3 +105,17 @@ export type HistoryRow = { app: string; kind: string; icon: string | null; cpuS:
 export type NetApp = { key: string; label: string; icon: string | null; section: Section; recv: number; send: number; conns: number; remotes: string[] };
 export type StartupItem = { id: string; name: string; icon: string | null; exec: string; comment: string; source: string; path: string; enabled: boolean };
 export type Service = { unit: string; description: string; scope: "system" | "user"; load: string; active: string; sub: string; state: string };
+
+export type SensorReading = {
+  id: string;
+  label: string;
+  sub: string | null;
+  kind: "temp" | "fan" | "volt" | "current" | "power" | "clock" | "percent" | "count" | "energy" | "memory";
+  value: number;
+  min: number;
+  max: number;
+  avg: number;
+  warn: number | null;
+  crit: number | null;
+};
+export type SensorDevice = { id: string; name: string; kind: string; note: string | null; readings: SensorReading[] };

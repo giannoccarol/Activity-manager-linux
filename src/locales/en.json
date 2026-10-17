@@ -172,7 +172,8 @@
     "services": "Services",
     "settings": "Settings",
     "startup": "Startup apps",
-    "users": "Users"
+    "users": "Users",
+    "sensors": "Sensors"
   },
   "network": {
     "app": "App",
@@ -629,6 +630,61 @@
       "notifyTitle": "Activity Manager {version} is available",
       "notifyBody": "Open Settings to see what's new and update.",
       "notifyAction": "Details"
+    },
+    "sensors": {
+      "cpu": "Processor",
+      "gpu": "Graphics card",
+      "memory": "Memory",
+      "memoryKind": "{kind} memory",
+      "wifi": "Wi-Fi card",
+      "thinkpadEc": "ThinkPad embedded controller",
+      "acpi": "ACPI sensors",
+      "battery": "Battery",
+      "batteryNamed": "Battery {name}",
+      "package": "CPU Package",
+      "pcore": "P-core {n}",
+      "ecore": "E-core {n}",
+      "core": "Core {n}",
+      "logical": "CPU {list}",
+      "composite": "Composite",
+      "sensor": "Sensor {n}",
+      "dimm": "Module {n}",
+      "address": "address {addr}",
+      "zone": "Zone {n}",
+      "zoneCpu": "CPU",
+      "zoneCpuPci": "CPU (PCI)",
+      "temperature": "Temperature",
+      "fan": "Fan {n}",
+      "voltage": "Voltage {n}",
+      "current": "Current {n}",
+      "power": "Power",
+      "usage": "Usage",
+      "gpuMemory": "Memory used",
+      "suspended": "Suspended: it is not woken up just to read its sensors",
+      "charging": "Charging",
+      "discharging": "On battery",
+      "full": "Charged",
+      "notCharging": "Plugged in, not charging",
+      "charge": "Charge level",
+      "batteryVoltage": "Voltage",
+      "batteryPower": "Power",
+      "energy": "Energy",
+      "wear": "Wear level",
+      "cycles": "Charge cycles"
     }
+  },
+  "sensors": {
+    "note": "Values since the app started: minimum, maximum and average.",
+    "hottest": "Hottest: {name}, {device}, {value}",
+    "reset": "Reset minimums and maximums",
+    "cols": {
+      "sensor": "Sensor",
+      "current": "Current",
+      "min": "Minimum",
+      "max": "Maximum",
+      "avg": "Average"
+    },
+    "empty": "No readable sensors on this computer.",
+    "loading": "Reading the sensors…"
   }
 }
