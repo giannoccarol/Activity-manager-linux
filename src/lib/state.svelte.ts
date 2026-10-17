@@ -1,10 +1,10 @@
-// Stato dell'interfaccia (rune di Svelte 5) e storico dei valori per i grafici.
-// L'istantanea e lo storico sono $state.raw: ogni secondo vengono sostituiti in blocco, senza
-// avvolgere centinaia di processi in proxy reattivi (era il costo principale di ogni aggiornamento).
+// UI state (Svelte 5 runes) and value history for the charts.
+// The snapshot and the history are $state.raw: they are replaced wholesale every second, without
+// wrapping hundreds of processes in reactive proxies (that was the main cost of each update).
 import type { Proc, Snapshot } from "./types";
 
 export type Sample = [number, number];
-const KEEP = 130; // ~2 minuti di campioni
+const KEEP = 130; // ~2 minutes of samples
 
 export type Page = "processes" | "performance" | "history" | "startup" | "network" | "users" | "details" | "services" | "settings";
 
@@ -17,7 +17,7 @@ class AppState {
   search = $state("");
   selected = $state<string | null>(null);
   count = $state(0);
-  /** campi statici dei processi: il backend li invia solo la prima volta */
+  /** static process fields: the backend sends them only the first time */
   #statics = new Map<string, Static>();
 
   push(s: Snapshot) {

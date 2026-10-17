@@ -1,5 +1,5 @@
-//! Vetro vero su Wayland: il compositor (KWin) sfoca ciò che sta dietro la finestra trasparente
-//! (protocollo standard ext-background-effect-v1). Tutto gira sul thread di GTK.
+//! Real glass on Wayland: the compositor (KWin) blurs what lies behind the transparent window
+//! (standard ext-background-effect-v1 protocol). Everything runs on the GTK thread.
 use gtk::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -35,11 +35,11 @@ thread_local! {
 }
 
 fn attach(win: &gtk::ApplicationWindow) -> Result<Blur, String> {
-    let gw = win.window().ok_or("finestra non ancora realizzata")?;
+    let gw = win.window().ok_or("window not realized yet")?;
     let display = gw.display();
     let kind = display.type_().name();
     if kind != "GdkWaylandDisplay" {
-        return Err(format!("display {kind}, non Wayland"));
+        return Err(format!("display {kind}, not Wayland"));
     }
     unsafe {
         use gtk::glib::translate::ToGlibPtr;
@@ -48,12 +48,12 @@ fn attach(win: &gtk::ApplicationWindow) -> Result<Blur, String> {
         let wl_display = gdk_wayland_sys::gdk_wayland_display_get_wl_display(d as *mut _);
         let wl_surface = gdk_wayland_sys::gdk_wayland_window_get_wl_surface(w as *mut _);
         if wl_display.is_null() || wl_surface.is_null() {
-            return Err("superficie Wayland assente".into());
+            return Err("no Wayland surface".into());
         }
         let conn = Connection::from_backend(Backend::from_foreign_display(wl_display as *mut _));
-        let id = ObjectId::from_ptr(WlSurface::interface(), wl_surface as *mut _).map_err(|e| format!("id superficie: {e:?}"))?;
-        let surface = WlSurface::from_id(&conn, id).map_err(|e| format!("superficie: {e:?}"))?;
-        let (globals, queue) = registry_queue_init::<St>(&conn).map_err(|e| format!("registro: {e:?}"))?;
+        let id = ObjectId::from_ptr(WlSurface::interface(), wl_surface as *mut _).map_err(|e| format!("surface id: {e:?}"))?;
+        let surface = WlSurface::from_id(&conn, id).map_err(|e| format!("surface: {e:?}"))?;
+        let (globals, queue) = registry_queue_init::<St>(&conn).map_err(|e| format!("registry: {e:?}"))?;
         let qh = queue.handle();
         let manager: Manager = globals.bind(&qh, 1..=1, ()).map_err(|e| format!("ext_background_effect: {e:?}"))?;
         let compositor: WlCompositor = globals.bind(&qh, 1..=4, ()).map_err(|e| format!("compositor: {e:?}"))?;
@@ -63,7 +63,7 @@ fn attach(win: &gtk::ApplicationWindow) -> Result<Blur, String> {
 }
 
 impl Blur {
-    /// Area sfocata: rettangolo con angoli arrotondati, approssimati con righe di 1 px.
+    /// Blurred area: rectangle with rounded corners, approximated with 1 px rows.
     fn set_region(&self, w: i32, h: i32, radius: i32) {
         let qh = self.queue.handle();
         let region = self.compositor.create_region(&qh, ());
@@ -81,9 +81,9 @@ impl Blur {
     }
 }
 
-/// Attiva, aggiorna o toglie la sfocatura dietro una finestra. `radius` segue gli angoli disegnati in CSS.
+/// Enables, updates or removes the blur behind a window. `radius` follows the corners drawn in CSS.
 pub fn apply(label: &str, win: &gtk::ApplicationWindow, on: bool, radius: i32) {
-    // all'avvio la finestra può non essere ancora realizzata: riprova poco dopo
+    // at startup the window may not be realized yet: retry shortly after
     if on && win.window().is_none() {
         let (label, win) = (label.to_string(), win.clone());
         gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(80), move || apply(&label, &win, on, radius));
@@ -105,7 +105,7 @@ pub fn apply(label: &str, win: &gtk::ApplicationWindow, on: bool, radius: i32) {
                     map.insert(label.to_string(), x);
                 }
                 Err(e) => {
-                    eprintln!("sfocatura non disponibile per {label}: {e}");
+                    eprintln!("blur unavailable for {label}: {e}");
                     return;
                 }
             }
@@ -113,7 +113,7 @@ pub fn apply(label: &str, win: &gtk::ApplicationWindow, on: bool, radius: i32) {
         if let (Some(x), Some(gw)) = (map.get(label), win.window()) {
             let full = gw.state().intersects(gtk::gdk::WindowState::MAXIMIZED | gtk::gdk::WindowState::FULLSCREEN | gtk::gdk::WindowState::TILED);
             x.set_region(gw.width(), gw.height(), if full { 0 } else { radius });
-            // lo stato del blur si applica al prossimo commit della superficie: chiede un nuovo fotogramma
+            // blur state applies on the next surface commit: request a new frame
             win.queue_draw();
         }
     });

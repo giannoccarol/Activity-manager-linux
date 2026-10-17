@@ -1,4 +1,4 @@
-// Dati simulati per sviluppare le pagine secondarie nel browser.
+// Mock data for developing the secondary pages in the browser.
 import type { HistoryRow, NetApp, Service, StartupItem } from "./types";
 
 const now = Date.now() / 1000;

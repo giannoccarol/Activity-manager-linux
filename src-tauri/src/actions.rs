@@ -1,5 +1,5 @@
-//! Azioni sui processi, sui gruppi e sui container. Ogni segnale verifica l'istante di avvio
-//! del processo per non colpire un PID riutilizzato da un altro programma.
+//! Actions on processes, groups and containers. Every signal checks the process start time
+//! so it does not hit a PID reused by another program.
 use crate::model::{Section, Snapshot};
 use crate::util::{read_raw, which};
 use serde_json::Value;
@@ -34,7 +34,7 @@ fn sig_of(name: &str) -> i32 {
     }
 }
 
-/// Invia un segnale; se manca il permesso (processi di altri utenti) chiede la password con pkexec.
+/// Sends a signal; if permission is missing (other users' processes) asks for the password via pkexec.
 fn signal(targets: &[(i32, u64)], sig: &str) -> Result<String, String> {
     let s = sig_of(sig);
     let mut denied = vec![];
@@ -72,7 +72,7 @@ fn set_efficiency(targets: &[(i32, u64)], on: bool) -> Result<String, String> {
         if r != 0 {
             denied.push(pid.to_string());
         }
-        // I/O: classe "idle" in efficienza, "best effort" altrimenti
+        // I/O: "idle" class in efficiency mode, "best effort" otherwise
         let prio = if on { 3 << 13 } else { (2 << 13) | 4 };
         unsafe { libc::syscall(libc::SYS_ioprio_set, 1, pid, prio) };
     }
@@ -176,7 +176,7 @@ fn properties(pid: i32, group: Option<&crate::model::Group>) -> Result<String, S
 pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
     let snap = last.lock().map_err(|_| "stato non disponibile")?.clone();
     let key = p.get("key").and_then(|v| v.as_str()).unwrap_or("");
-    // la chiave di una riga di processo è "p:<pid>:<avvio>"
+    // the key of a process row is "p:<pid>:<start>"
     let pkey: Option<(i32, u64)> = key.strip_prefix("p:").and_then(|r| {
         let (a, b) = r.split_once(':')?;
         Some((a.parse().ok()?, b.parse().ok()?))
@@ -184,7 +184,7 @@ pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
     let pid = p.get("pid").and_then(|v| v.as_i64()).map(|v| v as i32).or(pkey.map(|k| k.0));
     let p_ctime = p.get("ctime").and_then(|v| v.as_u64()).or(pkey.map(|k| k.1));
     let group = snap.as_ref().and_then(|s| s.groups.iter().find(|g| g.key == key).cloned());
-    // destinatari: un processo singolo (pid) o tutti i processi del gruppo (key)
+    // targets: a single process (pid) or all processes in the group (key)
     let targets: Vec<(i32, u64)> = match (pid, &group) {
         (Some(pid), _) => {
             let ct = p_ctime.or_else(|| start_time(pid));

@@ -1,4 +1,4 @@
-// Impostazioni: lette dal backend, applicate subito nell'interfaccia (il tema anche da localStorage, senza sfarfallio).
+// Settings: read from the backend, applied immediately in the UI (the theme also from localStorage, without flicker).
 import { isTauri } from "./api";
 import { ui } from "./ui.svelte";
 

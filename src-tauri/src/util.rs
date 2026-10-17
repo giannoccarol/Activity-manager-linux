@@ -1,4 +1,4 @@
-//! Piccole utilità: lettura di file, comandi esterni, percorsi XDG.
+//! Small utilities: file reading, external commands, XDG paths.
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
@@ -23,8 +23,8 @@ pub fn config_home() -> PathBuf {
     std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from).unwrap_or_else(|| home().join(".config"))
 }
 
-/// Esegue un comando con timeout; restituisce stdout ed esito. Lo stdout è letto in un thread
-/// a parte, così un output grande non riempie la pipe bloccando il processo.
+/// Runs a command with a timeout; returns stdout and exit status. Stdout is read on a separate
+/// thread, so large output does not fill the pipe and block the process.
 pub fn run_status(cmd: &str, args: &[&str], timeout: Duration) -> (bool, String) {
     let child = Command::new(cmd)
         .args(args)
@@ -61,7 +61,7 @@ pub fn run_status(cmd: &str, args: &[&str], timeout: Duration) -> (bool, String)
     (ok, String::from_utf8_lossy(&out).into_owned())
 }
 
-/// Esegue un comando con timeout e restituisce lo stdout (vuoto in caso di errore).
+/// Runs a command with a timeout and returns stdout (empty on error).
 pub fn run(cmd: &str, args: &[&str], timeout: Duration) -> String {
     run_status(cmd, args, timeout).1
 }
@@ -72,7 +72,7 @@ pub fn which(cmd: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Decodifica gli escape di systemd (\x2d → '-').
+/// Decodes systemd escapes (\x2d → '-').
 pub fn unescape(s: &str) -> String {
     let b = s.as_bytes();
     let mut out = Vec::with_capacity(b.len());

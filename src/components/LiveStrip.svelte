@@ -66,7 +66,7 @@
     ];
   });
 
-  // un solo momento animato: all'apertura i numeri salgono; poi si aggiornano senza animazione
+  // a single animated moment: on open the numbers count up; then they update without animation
   const tweens: Record<string, Tween<number>> = {};
   let opened = false;
   for (const k of ["cpu", "mem", "disk", "net", "gpu"]) tweens[k] = new Tween(0, { duration: 800, easing: cubicOut });

@@ -12,7 +12,7 @@
   import Icon from "../components/Icon.svelte";
   import ContextMenu, { type MenuItem } from "../components/ContextMenu.svelte";
 
-  // Servizi systemd di sistema e dell'utente: avvio, arresto, avvio automatico.
+  // System and user systemd services: start, stop, autostart.
   type F = "all" | "running" | "stopped" | "failed";
   const FILTERS: [F, string][] = [
     ["all", "Tutti"],
@@ -73,7 +73,7 @@
   function runState(s: Service): F {
     return s.active === "failed" ? "failed" : s.active === "active" || s.active === "activating" || s.active === "reloading" ? "running" : "stopped";
   }
-  // processi del servizio dall'istantanea, per memoria e CPU
+  // the service's processes from the snapshot, for memory and CPU
   const byUnit = $derived.by(() => {
     const m = new Map<string, Group>();
     for (const g of app.snap?.groups ?? []) if (g.unit) m.set(`${g.section === "sys" ? "system" : "user"}:${g.unit}`, g);

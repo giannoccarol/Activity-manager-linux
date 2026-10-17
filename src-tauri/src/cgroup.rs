@@ -1,4 +1,4 @@
-//! Interpretazione dei cgroup di systemd: a quale app, servizio o container appartiene un processo.
+//! Interprets systemd cgroups: which app, service or container a process belongs to.
 use crate::util::unescape;
 
 pub struct CgInfo {
@@ -34,7 +34,7 @@ pub fn parse(path: &str) -> CgInfo {
     CgInfo { unit_path: format!("/{}", parts.join("/")), unit: None, user_manager: uid }
 }
 
-/// Unità di un'app avviata dall'utente: app-<id>-<rnd>.scope oppure app-<id>@<rnd>.service.
+/// Unit of an app launched by the user: app-<id>-<rnd>.scope or app-<id>@<rnd>.service.
 pub fn is_app_unit(unit: &str) -> bool {
     if !unit.starts_with("app-") {
         return false;

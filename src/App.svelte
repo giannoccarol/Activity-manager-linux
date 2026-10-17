@@ -66,7 +66,7 @@
     if (app.page === "performance") kept.performance = true;
   });
 
-  // finestra ingrandita o a schermo intero: niente angoli arrotondati né contorno
+  // maximized or fullscreen window: no rounded corners or outline
   async function trackMaximized() {
     if (!isTauri) return;
     const { getCurrentWindow } = await import("@tauri-apps/api/window");
@@ -94,7 +94,7 @@
   <SecureScreen />
 {:else}
   {#if !isTauri && settings.v.theme === "glass"}
-    <!-- solo nel browser di sviluppo: simula il desktop che nell'app si vede sfocato da KWin -->
+    <!-- dev browser only: simulates the desktop that the app shows blurred by KWin -->
     <div class="devdesk" aria-hidden="true"></div>
   {/if}
   <div class="shell">
@@ -116,7 +116,7 @@
         {:else if !app.snap}
           <p class="wait">Raccolgo i primi dati…</p>
         {:else if app.page === "processes" || app.page === "performance"}
-          <!-- le due pagine più usate restano in memoria: tornarci è immediato -->
+          <!-- the two most used pages stay in memory: going back to them is instant -->
         {:else if app.page === "network"}
           <Network />
         {:else if app.page === "users"}
@@ -184,7 +184,7 @@
     inset: 0;
   }
 
-  /* pagina tenuta in memoria: non disegnata né cliccabile, ma con l'impaginazione pronta */
+  /* page kept in memory: not painted or clickable, but with its layout ready */
   .kept.off {
     content-visibility: hidden;
     pointer-events: none;

@@ -109,7 +109,7 @@
   button.active:hover {
     background: transparent;
   }
-  /* indicatore della voce attiva: scorre da una voce all'altra */
+  /* active item indicator: slides from one item to the next */
   .side > :global(.pill) {
     border-radius: var(--r-sm);
     background: var(--select);

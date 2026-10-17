@@ -1,4 +1,4 @@
-// Contratto dei dati tra il backend Rust e l'interfaccia (serializzato in camelCase).
+// Data contract between the Rust backend and the UI (serialized in camelCase).
 
 export type Section = "app" | "ctr" | "bg" | "sys";
 export type Status = "running" | "stopped" | "efficiency" | "paused";
@@ -10,9 +10,9 @@ export interface Proc {
   name: string;
   icon?: string | null;
   user: string;
-  cpu: number; // % della CPU totale
-  mem: number; // byte (memoria privata)
-  disk: number | null; // byte/s, null se non leggibile
+  cpu: number; // % of total CPU
+  mem: number; // bytes (private memory)
+  disk: number | null; // bytes/s, null if unreadable
   gpu: number; // %
   gpuEngine: string;
   status: Status;
@@ -25,10 +25,10 @@ export interface Proc {
 export interface Group {
   key: string;
   label: string;
-  icon: string | null; // URL dell'icona già risolta
+  icon: string | null; // already-resolved icon URL
   section: Section;
   unit: string;
-  image?: string; // immagine del container
+  image?: string; // container image
   cpu: number;
   mem: number;
   disk: number | null;
@@ -57,7 +57,7 @@ export interface Net {
   ssid: string | null;
   send: number;
   recv: number;
-  link: number; // byte/s, 0 se sconosciuta
+  link: number; // bytes/s, 0 if unknown
 }
 
 export interface Gpu {
@@ -89,7 +89,7 @@ export interface Insight {
 }
 
 export interface Snapshot {
-  t: number; // secondi (monotonico)
+  t: number; // seconds (monotonic)
   cpu: { total: number; kernel: number; perCore: number[]; freq: number; temp: number | null; model: string };
   mem: { total: number; used: number; available: number; pct: number; swapUsed: number; swapTotal: number; cached: number };
   disks: Disk[];

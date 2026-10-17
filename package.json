@@ -2,6 +2,12 @@
   "name": "gestione-attivita",
   "private": true,
   "version": "2.0.0",
+  "description": "Windows-style task manager for Linux and KDE Plasma (Rust + Tauri + Svelte)",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/giannoccarol/Activity-manager-linux.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

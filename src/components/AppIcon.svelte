@@ -3,7 +3,7 @@
   import type { Section } from "../lib/types";
   import { iconUrl } from "../lib/icons.svelte";
 
-  // Icona di un'app o di un processo: file del tema, oppure un glifo ("glyph:nome") o quello della sezione.
+  // App or process icon: a theme file, or a glyph ("glyph:name") or the section's one.
   let { src, section = "bg", size = 20 }: { src?: string | null; section?: Section; size?: number } = $props();
   let broken = $state(false);
   $effect(() => {
@@ -11,7 +11,7 @@
     broken = false;
   });
   const url = $derived(iconUrl(src));
-  // sfuma solo l'icona che arriva dopo (prima volta che si legge il file), non a ogni riga ricreata
+  // fade in only an icon that arrives late (first time the file is read), not every recreated row
   const late = !iconUrl(src);
   const glyph = $derived(src?.startsWith("glyph:") ? src.slice(6) : section === "ctr" ? "container" : section === "sys" ? "service" : section === "app" ? "app" : "terminal");
 </script>

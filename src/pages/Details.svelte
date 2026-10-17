@@ -10,7 +10,7 @@
   import Icon from "../components/Icon.svelte";
   import ContextMenu, { type MenuItem } from "../components/ContextMenu.svelte";
 
-  // Tutti i processi in un elenco piatto, come la scheda Dettagli di Windows.
+  // All processes in a flat list, like the Windows Details tab.
   type Row = Proc & { gicon: string | null; section: Section; group: string };
   const STATUS = { running: "In esecuzione", stopped: "Sospeso", efficiency: "Efficienza", paused: "In pausa" } as const;
 

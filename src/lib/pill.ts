@@ -1,5 +1,5 @@
-// Indicatore che scorre sotto l'elemento attivo di un gruppo (voce di menu, segmento).
-// Un solo elemento assoluto che si sposta con transform: nessun ricalcolo del layout attorno.
+// Indicator that slides under the active item of a group (menu item, segment).
+// A single absolute element moved with transform: no layout recalculation around it.
 export function pill(node: HTMLElement, opts: { selector?: string; axis?: "x" | "y" } = {}) {
   const selector = opts.selector ?? "button.on";
   const el = document.createElement("span");
@@ -16,7 +16,7 @@ export function pill(node: HTMLElement, opts: { selector?: string; axis?: "x" | 
     }
     const nr = node.getBoundingClientRect();
     const tr = target.getBoundingClientRect();
-    // coordinate nel contenuto del contenitore, anche se scorre
+    // coordinates within the container's content, even when it scrolls
     const x = tr.left - nr.left - node.clientLeft + node.scrollLeft;
     const y = tr.top - nr.top - node.clientTop + node.scrollTop;
     if (opts.axis === "y") {
@@ -36,7 +36,7 @@ export function pill(node: HTMLElement, opts: { selector?: string; axis?: "x" | 
     }
   }
 
-  // ricolloca quando cambia la voce attiva o le dimensioni
+  // reposition when the active item or the size changes
   const mo = new MutationObserver(() => place());
   mo.observe(node, { attributes: true, subtree: true, attributeFilter: ["class", "aria-selected", "aria-checked"], childList: true });
   const ro = new ResizeObserver(() => {

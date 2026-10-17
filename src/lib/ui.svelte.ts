@@ -1,4 +1,4 @@
-// Stato effimero dell'interfaccia: avvisi brevi e finestre di dialogo.
+// Ephemeral UI state: short toasts and dialogs.
 export type Toast = { id: number; text: string; level: "info" | "crit" };
 export type Props = {
   pid: number;

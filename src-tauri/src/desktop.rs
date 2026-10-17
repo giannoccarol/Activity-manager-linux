@@ -1,4 +1,4 @@
-//! Indice dei file .desktop (nomi localizzati, icone) e risoluzione delle icone dal tema.
+//! Index of .desktop files (localized names, icons) and icon resolution from the theme.
 use crate::util::{data_home, home, read_raw};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -182,7 +182,7 @@ impl DesktopDb {
     }
 }
 
-/// Risoluzione dei nomi di icona in file (tema di KDE, hicolor, pixmaps), con cache.
+/// Resolves icon names to files (KDE theme, hicolor, pixmaps), with a cache.
 pub struct Icons {
     themes: Vec<PathBuf>,
     cache: HashMap<String, Option<String>>,
@@ -239,7 +239,7 @@ impl Icons {
         if let Some(v) = self.cache.get(name) {
             return v.clone();
         }
-        // percorso reale: il protocollo asset di Tauri rifiuta i collegamenti simbolici relativi (frequenti in Breeze)
+        // real path: Tauri's asset protocol rejects relative symlinks (common in Breeze)
         let found = self.find(name).map(|p| std::fs::canonicalize(&p).unwrap_or(p).to_string_lossy().into_owned());
         self.cache.insert(name.to_string(), found.clone());
         found
@@ -252,7 +252,7 @@ impl Icons {
         }
         for ctx in CONTEXTS {
             for t in &self.themes {
-                // layout hicolor: <tema>/<dim>/<contesto>/nome
+                // hicolor layout: <theme>/<size>/<context>/name
                 for s in SIZES {
                     for ext in ["svg", "png"] {
                         let f = t.join(s).join(ctx).join(format!("{name}.{ext}"));
@@ -261,7 +261,7 @@ impl Icons {
                         }
                     }
                 }
-                // layout Breeze: <tema>/<contesto>/<dim>/nome
+                // Breeze layout: <theme>/<context>/<size>/name
                 for s in ["64", "48", "32", "24", "22", "16"] {
                     let f = t.join(ctx).join(s).join(format!("{name}.svg"));
                     if f.is_file() {

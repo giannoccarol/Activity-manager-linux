@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Icone a tratto, coerenti tra loro (griglia 24, tratto 1,6).
+  // Consistent stroke icons (24 grid, 1.6 stroke).
   let { name, size = 16, stroke = 1.6 }: { name: string; size?: number; stroke?: number } = $props();
 
   const P: Record<string, string> = {

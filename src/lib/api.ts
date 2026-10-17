@@ -1,4 +1,4 @@
-// Collegamento al backend Rust (Tauri). Nel browser usa dati simulati per sviluppare l'interfaccia.
+// Bridge to the Rust (Tauri) backend. In the browser it uses mock data to develop the UI.
 import type { Snapshot } from "./types";
 import { ui, type Props } from "./ui.svelte";
 
@@ -21,7 +21,7 @@ export async function subscribe(cb: (s: Snapshot) => void): Promise<void> {
     return;
   }
   const { mockSnapshot } = await import("./mock");
-  // due minuti di storia già pronti, così i grafici sono pieni fin dall'apertura
+  // two minutes of history ready up front, so the charts are full from the start
   for (let s = 120; s > 0; s--) cb(mockSnapshot(s));
   cb(mockSnapshot(0));
   setInterval(() => cb(mockSnapshot()), 1000);
@@ -29,14 +29,14 @@ export async function subscribe(cb: (s: Snapshot) => void): Promise<void> {
 
 async function call(action: string, payload: Record<string, unknown>): Promise<string | null> {
   if (!isTauri) {
-    console.info("[simulazione] azione", action, payload);
+    console.info("[mock] action", action, payload);
     return null;
   }
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<string>("action", { action, payload });
 }
 
-/** Esegue un'azione sul backend; gli errori diventano un avviso in basso. */
+/** Runs an action on the backend; errors become a toast at the bottom. */
 export async function act(action: string, payload: Record<string, unknown> = {}): Promise<string | null> {
   if (action === "run-dialog") {
     ui.dialog = { kind: "run" };
@@ -55,7 +55,7 @@ export async function act(action: string, payload: Record<string, unknown> = {})
   }
 }
 
-/** Comando del backend; nel browser restituisce i dati simulati. */
+/** Backend command; in the browser it returns mock data. */
 export async function invoke<T>(cmd: string, args: Record<string, unknown> = {}, mock?: () => T): Promise<T> {
   if (!isTauri) {
     if (mock) return mock();

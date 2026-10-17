@@ -1,4 +1,4 @@
-//! Numeri all'italiana per le frasi della diagnosi.
+//! Italian-style numbers for the diagnosis sentences.
 pub fn num(v: f64, dec: usize) -> String {
     let s = format!("{:.*}", dec, v.abs());
     let (int, frac) = s.split_once('.').map(|(a, b)| (a.to_string(), Some(b.to_string()))).unwrap_or((s.clone(), None));

@@ -3,7 +3,7 @@ dist/
 *.log
 .DS_Store
 
-# icone di app di terzi usate solo dai dati dimostrativi nel browser (npm run dev)
+# third-party app icons used only by the demo data in the browser (npm run dev)
 public/mock-icons/*
 !public/mock-icons/app.svg
 !public/mock-icons/terminal.svg

@@ -1,4 +1,4 @@
-//! Contratto dei dati inviati all'interfaccia (vedi src/lib/types.ts).
+//! Contract for the data sent to the UI (see src/lib/types.ts).
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -25,7 +25,7 @@ pub enum Status {
 pub struct Proc {
     pub pid: i32,
     pub ctime: u64,
-    // campi statici: inviati all'interfaccia solo la prima volta che vede il processo (vedi wire())
+    // static fields: sent to the UI only the first time it sees the process (see wire())
     #[serde(skip_serializing_if = "String::is_empty")]
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,7 +35,7 @@ pub struct Proc {
     pub cpu: f64,
     pub mem: u64,
     pub disk: Option<f64>,
-    // valori più frequenti omessi: l'interfaccia li ricostruisce (gpu 0, nessun motore, priorità 0)
+    // most common values omitted: the UI rebuilds them (gpu 0, no engine, priority 0)
     #[serde(skip_serializing_if = "is_zero")]
     pub gpu: f64,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -191,8 +191,8 @@ fn r2(v: f64) -> f64 {
 }
 
 impl Snapshot {
-    /// Copia leggera per l'interfaccia: numeri arrotondati e campi statici dei processi solo per
-    /// quelli che l'interfaccia non ha ancora visto (`sent` viene aggiornato).
+    /// Lightweight copy for the UI: rounded numbers, and static process fields only for
+    /// the processes the UI has not seen yet (`sent` is updated).
     pub fn wire(&self, sent: &mut std::collections::HashSet<(i32, u64)>) -> Snapshot {
         let mut s = self.clone();
         let mut live = std::collections::HashSet::with_capacity(sent.len() + 16);

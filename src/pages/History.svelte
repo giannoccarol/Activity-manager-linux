@@ -13,7 +13,7 @@
   import Dialog from "../components/Dialog.svelte";
   import { app } from "../lib/state.svelte";
 
-  // Quanto ha consumato ogni app nel tempo, dal database della cronologia.
+  // How much each app has used over time, from the history database.
   const RANGES: [number, string][] = [
     [1, "Oggi"],
     [7, "7 giorni"],
@@ -56,7 +56,7 @@
     }
   }
 
-  // ogni riavvio di un container ha un nome nuovo: le righe con la stessa immagine diventano una
+  // each container restart gets a new name: rows with the same image are merged into one
   type Row = HistoryRow & { runs: number };
   const merged = $derived.by(() => {
     const out = new Map<string, Row>();
@@ -79,7 +79,7 @@
   const needle = $derived(app.search.trim().toLowerCase());
   const shown = $derived(merged.filter((r) => (!onlyApps || r.kind === "app" || r.kind === "ctr") && (!needle || r.app.toLowerCase().includes(needle))));
   const totals = $derived(shown.reduce((a, r) => a + r.cpuS, 0));
-  // i container sono salvati come «nome · immagine»
+  // containers are stored as "name · image"
   function split(s: string) {
     const i = s.indexOf("·");
     return i < 0 ? [s, ""] : [s.slice(0, i).trim(), s.slice(i + 1).trim()];

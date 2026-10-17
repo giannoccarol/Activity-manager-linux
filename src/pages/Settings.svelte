@@ -158,7 +158,7 @@
     color: var(--muted);
     font-size: var(--fs-sm);
   }
-  /* anteprime: ogni tema con i propri colori, indipendenti da quello attivo */
+  /* previews: each theme with its own colors, independent of the active one */
   .pv-side {
     display: flex;
     flex-direction: column;

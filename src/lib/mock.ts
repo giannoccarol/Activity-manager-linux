@@ -1,4 +1,4 @@
-// Dati simulati per sviluppare l'interfaccia nel browser (ricalcati su un sistema reale).
+// Mock data for developing the UI in the browser (modeled on a real system).
 import type { Group, Insight, Proc, Section, Snapshot } from "./types";
 import { rateStr, sizeStr, pct0 } from "./format";
 
@@ -99,7 +99,7 @@ function makeGroup(d: Def, i: number): Group {
   };
 }
 
-/** spostamento del tempo simulato, per riempire subito lo storico dei grafici */
+/** simulated time offset, to fill the chart history right away */
 let shift = 0;
 
 export function mockSnapshot(offset?: number): Snapshot {

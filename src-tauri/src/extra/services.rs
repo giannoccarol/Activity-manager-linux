@@ -1,4 +1,4 @@
-//! Servizi systemd del gestore di sistema e di quello dell'utente: unità caricate più quelle solo installate.
+//! systemd services of the system and user managers: loaded units plus those that are only installed.
 use crate::util::{config_home, data_home, read_raw, run, unescape};
 use serde::Serialize;
 use serde_json::Value;
@@ -21,12 +21,12 @@ pub struct Service {
     pub state: String,
 }
 
-/// Stato di abilitazione per nome di unità: [sistema, utente].
+/// Enablement state by unit name: [system, user].
 type Files = [HashMap<String, String>; 2];
 
-/// `list-unit-files` è lento (quasi un secondo): stati di abilitazione in cache per 30 s, azzerata dopo ogni azione.
+/// `list-unit-files` is slow (almost a second): enablement states cached for 30 s, cleared after every action.
 static FILES: Mutex<Option<(Instant, Files)>> = Mutex::new(None);
-/// Descrizioni delle unità installate ma non caricate (non cambiano durante la sessione).
+/// Descriptions of units that are installed but not loaded (they do not change during the session).
 static DESCS: Mutex<Option<HashMap<(bool, String), String>>> = Mutex::new(None);
 
 fn systemctl_json(user: bool, args: &[&str]) -> Vec<Value> {
@@ -59,7 +59,7 @@ fn unit_dirs(user: bool) -> Vec<PathBuf> {
     }
 }
 
-/// Description= letta dal file dell'unità; per quelle non trovate si chiede a systemctl in un'unica chiamata.
+/// Description= read from the unit file; for those not found, systemctl is asked in a single call.
 fn describe(user: bool, names: &[String]) -> HashMap<String, String> {
     let dirs = unit_dirs(user);
     let mut out = HashMap::new();
@@ -116,7 +116,7 @@ fn scope_list(user: bool, files: &HashMap<String, String>) -> Vec<Service> {
         let state = files.get(n).or_else(|| n.split_once('@').and_then(|(t, _)| files.get(&format!("{t}@.service"))));
         let load = u.map(|u| s(u, "load")).unwrap_or(if state.is_some() { "not-loaded" } else { "not-found" });
         let state = state.map(String::as_str).unwrap_or("");
-        // come nella versione Python: niente unità inesistenti, alias e app dell'utente (stanno in Processi)
+        // as in the Python version: no missing units, aliases or user apps (they belong in Processi)
         if load == "not-found" || state == "alias" || n.starts_with("app-") {
             continue;
         }
@@ -168,8 +168,8 @@ fn valid_unit(u: &str) -> bool {
         && u.chars().all(|c| c.is_ascii_alphanumeric() || "@._:-\\".contains(c))
 }
 
-/// Esegue systemctl con timeout, restituendo (riuscito, stderr). Nessun pkexec: systemctl chiede a polkit,
-/// che mostra la finestra di autenticazione di KDE.
+/// Runs systemctl with a timeout, returning (success, stderr). No pkexec: systemctl asks polkit,
+/// which shows the KDE authentication dialog.
 fn systemctl(args: &[&str], timeout: Duration) -> Result<(bool, String), String> {
     let mut child = Command::new("systemctl")
         .args(args)

@@ -1,13 +1,13 @@
-// Transizioni dell'interfaccia: brevi, solo opacità e trasformazioni, rispettano "riduci animazioni".
+// UI transitions: short, opacity and transforms only, honoring "reduce motion".
 import type { TransitionConfig } from "svelte/transition";
 import { cubicOut } from "svelte/easing";
 
 const mq = typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 export const reduced = () => !!mq?.matches;
 
-/** Animazioni periodiche (a ogni aggiornamento): grafici che scorrono, numeri, barrette, riordino.
- *  Girano solo con la finestra in primo piano: ogni fotogramma in più costa, e chi guarda l'app di
- *  sfuggita su un altro schermo non nota la differenza. Gli interruttori servono anche a --bench. */
+/** Periodic animations (on every update): scrolling charts, numbers, meter bars, reordering.
+ *  They run only while the window is focused: every extra frame has a cost, and someone glancing at
+ *  the app on another screen won't notice the difference. The switches are also used by --bench. */
 export const flags = $state({ glide: true, flip: true, tween: true, meterSteps: 20, focused: true });
 
 if (typeof window !== "undefined") {
@@ -19,37 +19,37 @@ if (typeof window !== "undefined") {
   window.addEventListener("blur", sync);
   sync();
 }
-/** vero se le animazioni periodiche possono girare */
+/** true if periodic animations may run */
 export const ambient = () => flags.focused && !reduced();
 const d = (ms: number) => (reduced() ? 0 : ms);
 
-/** curva di arrivo morbido (come --ease-out) */
+/** soft-landing curve (like --ease-out) */
 export const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
 
-/** entrata/uscita con leggero spostamento verticale */
+/** enter/exit with a slight vertical shift */
 export function rise(_: Element, { y = 6, duration = 180, delay = 0 } = {}): TransitionConfig {
   return { duration: d(duration), delay: reduced() ? 0 : delay, easing: easeOut, css: (t, u) => `opacity:${t};transform:translateY(${u * y}px)` };
 }
 
-/** comparsa di un elemento galleggiante (menu, finestra) dal punto d'origine */
+/** appearance of a floating element (menu, dialog) from its origin point */
 export function pop(_: Element, { scale = 0.96, duration = 160 } = {}): TransitionConfig {
   return { duration: d(duration), easing: easeOut, css: (t, u) => `opacity:${t};transform:scale(${1 - u * (1 - scale)})` };
 }
 
-/** dissolvenza semplice */
+/** simple fade */
 export function fadeq(_: Element, { duration = 140, delay = 0 } = {}): TransitionConfig {
   return { duration: d(duration), delay, easing: cubicOut, css: (t) => `opacity:${t}` };
 }
 
-/** uscita verso sinistra (riga terminata) */
+/** exit to the left (terminated row) */
 export function away(_: Element, { duration = 200 } = {}): TransitionConfig {
   return { duration: d(duration), easing: (t) => t * t, css: (t, u) => `opacity:${t};transform:translateX(${-u * 16}px)` };
 }
 
-/** durata di animate:flip, 0 con "riduci animazioni" */
+/** animate:flip duration, 0 with "reduce motion" */
 export const flipMs = () => (flags.flip && flags.focused ? d(280) : 0);
 
-/** Entrata di una vista tenuta in memoria quando torna attiva (senza ricostruirla). */
+/** Entrance of a view kept in memory when it becomes active again (without rebuilding it). */
 export function enterOn(node: HTMLElement, active: boolean) {
   let was = active;
   return {
@@ -61,7 +61,7 @@ export function enterOn(node: HTMLElement, active: boolean) {
   };
 }
 
-/** Cambio di tema con dissolvenza dei colori (classe temporanea, nessun costo dopo). */
+/** Theme change with a color crossfade (temporary class, no cost afterwards). */
 export function themeFade(apply: () => void) {
   if (reduced()) return apply();
   const html = document.documentElement;
