@@ -36,8 +36,8 @@
     }
   }
 
-  // valori arrotondati per ordinare: due processi quasi alla pari non si scambiano a ogni secondo
-  // (meno righe che si muovono, riordino animato solo per i cambi veri)
+  // rounded values for sorting: two nearly tied processes don't swap places every second
+  // (fewer rows moving, animated reordering only for real changes)
   function val(x: Group | Proc, k: Key): number | string {
     if (k === "name") return ("label" in x ? x.label : x.name).toLowerCase();
     if (k === "status") return x.status;
@@ -53,16 +53,16 @@
     const nb = "label" in b ? b.label : b.name;
     return na < nb ? -1 : na > nb ? 1 : 0;
   }
-  // barretta a gradini del 2,5%: le variazioni invisibili non fanno partire animazioni
+  // meter bar in 5% steps (flags.meterSteps): invisible changes don't trigger animations
   const q = (v: number) => Math.round(v * flags.meterSteps) / flags.meterSteps;
 
   const needle = $derived(app.search.trim().toLowerCase());
-  // gruppi mostrati solo per alcuni processi figli: si aprono da soli per far vedere quali
+  // groups shown only for some child processes: they expand on their own to show which ones
   let narrowed = new Set<string>();
   function matches(g: Group): Group | null {
     if (!needle) return g;
     if (g.label.toLowerCase().includes(needle) || g.image?.toLowerCase().includes(needle)) return g;
-    // nella riga di comando si cerca dal terzo carattere: prima corrisponderebbe quasi tutto
+    // the command line is searched from the third character: before that almost everything would match
     const inCmd = needle.length >= 3;
     const procs = g.procs.filter(
       (p) => p.name.toLowerCase().includes(needle) || String(p.pid) === needle || (inCmd && p.cmd.toLowerCase().includes(needle)),
@@ -72,7 +72,7 @@
     return { ...g, procs };
   }
 
-  // molte righe che compaiono o spariscono insieme (ricerca, filtro): niente animazione per riga
+  // many rows appearing or disappearing at once (search, filter): no per-row animation
   let shownKeys = new Set<string>();
   let bulk = false;
   const sections = $derived.by(() => {
@@ -131,7 +131,7 @@
   }
 </script>
 
-<!-- una cella numerica è un solo elemento: la barretta è disegnata in CSS da --p -->
+<!-- a numeric cell is a single element: the meter bar is drawn in CSS from --p -->
 {#snippet numcell(v: number | null, kind: "cpu" | "mem" | "disk" | "gpu")}
   {#if v === null}
     <span class="num na" title="Non leggibile senza privilegi">—</span>
@@ -175,7 +175,7 @@
       {#each sec.groups as g (g.key)}
         {@const multi = g.procs.length > 1}
         {@const isOpen = open[g.key] || (!!needle && multi && narrowed.has(g.key))}
-        <!-- ogni gruppo scivola nella nuova posizione quando cambia l'ordine -->
+        <!-- each group glides to its new position when the order changes -->
         <div class="grp" animate:flip={{ duration: flipMs(), easing: easeOut }} in:fadeq={{ duration: bulk ? 0 : 200 }} out:away={{ duration: bulk ? 0 : 200 }}>
         <div
           class="row group"
@@ -314,7 +314,7 @@
   .row {
     position: relative;
     height: 36px;
-    /* righe fuori schermo: niente impaginazione né disegno */
+    /* off-screen rows: no layout or painting */
     content-visibility: auto;
     contain-intrinsic-size: auto 36px;
     contain: layout style;
@@ -453,7 +453,7 @@
   .num.na {
     color: var(--faint);
   }
-  /* barretta: binario e riempimento, senza elementi in più */
+  /* meter bar: track and fill, without extra elements */
   .num:not(.na)::before,
   .num:not(.na)::after {
     content: "";

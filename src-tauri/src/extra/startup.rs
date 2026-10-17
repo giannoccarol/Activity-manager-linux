@@ -1,5 +1,5 @@
-//! App di avvio: voci XDG autostart dell'utente (~/.config/autostart) e di sistema (/etc/xdg/autostart).
-//! Disabilitare una voce di sistema crea una copia con Hidden=true nella cartella dell'utente, come Impostazioni di sistema.
+//! Startup apps: XDG autostart entries of the user (~/.config/autostart) and the system (/etc/xdg/autostart).
+//! Disabling a system entry creates a copy with Hidden=true in the user's folder, like System Settings.
 use crate::desktop::{parse_desktop, Icons};
 use crate::util::config_home;
 use serde::Serialize;
@@ -19,7 +19,7 @@ pub struct StartupItem {
     pub enabled: bool,
 }
 
-/// Segna le copie create da Gestione attività (stessa chiave della versione Python): riabilitandole si torna alla voce di sistema.
+/// Marks the copies created by Gestione attività (same key as the Python version): re-enabling them reverts to the system entry.
 const MARK: &str = "X-Gestione-Attivita-Override";
 
 fn user_dir() -> PathBuf {
@@ -46,7 +46,7 @@ fn is_true(kv: &HashMap<String, String>, key: &str) -> Option<bool> {
 
 pub fn list() -> Vec<StartupItem> {
     let mut entries: BTreeMap<String, (Option<PathBuf>, Option<PathBuf>)> = BTreeMap::new();
-    // la prima cartella di XDG_CONFIG_DIRS ha la precedenza
+    // the first XDG_CONFIG_DIRS folder takes precedence
     for d in system_dirs().iter().rev() {
         for f in desktop_files(d) {
             entries.entry(f.clone()).or_default().1 = Some(d.join(&f));
@@ -63,7 +63,7 @@ pub fn list() -> Vec<StartupItem> {
     for (id, (user, system)) in entries {
         let Some(path) = user.clone().or(system.clone()) else { continue };
         let Some(kv) = parse_desktop(&path) else { continue };
-        // copia dell'utente ridotta a "Hidden=true" (senza Exec): il resto dalla voce di sistema
+        // user copy reduced to "Hidden=true" (no Exec): the rest comes from the system entry
         let base = system.as_deref().filter(|_| user.is_some() && !kv.contains_key("Exec")).and_then(parse_desktop).unwrap_or_default();
         let get = |k: &str| kv.get(k).or_else(|| base.get(k)).filter(|v| !v.is_empty()).cloned();
         if shown(get("OnlyShowIn").as_ref()) == Some(false) || shown(get("NotShowIn").as_ref()) == Some(true) {
@@ -88,7 +88,7 @@ pub fn list() -> Vec<StartupItem> {
     out
 }
 
-/// Imposta (o aggiunge) una chiave nella sezione [Desktop Entry] lasciando invariato il resto del file.
+/// Sets (or adds) a key in the [Desktop Entry] section, leaving the rest of the file unchanged.
 fn set_key(text: &str, key: &str, value: &str) -> String {
     let mut out: Vec<String> = vec![];
     let (mut in_entry, mut done, mut seen_entry) = (false, false, false);
@@ -119,7 +119,7 @@ fn set_key(text: &str, key: &str, value: &str) -> String {
     out.join("\n") + "\n"
 }
 
-/// Scrittura atomica: un collegamento simbolico viene sostituito da un file vero, senza toccare la destinazione.
+/// Atomic write: a symlink is replaced by a real file, without touching its target.
 fn write(path: &Path, text: &str) -> std::io::Result<()> {
     let tmp = path.with_extension("desktop.tmp");
     std::fs::write(&tmp, text)?;
@@ -145,7 +145,7 @@ pub fn set_enabled(id: &str, enabled: bool) -> Result<(), String> {
     let user = ud.join(&id);
     let own = user.symlink_metadata().is_ok().then(|| parse_desktop(&user).unwrap_or_default());
     let system = system_file(&id);
-    // si modifica la copia dell'utente solo se è una voce completa e non una nostra copia della voce di sistema
+    // edit the user copy only if it is a full entry and not our own copy of the system entry
     let src = match (&own, &system) {
         (Some(kv), Some(sys)) if !kv.contains_key("Exec") || is_true(kv, MARK) == Some(true) => sys.clone(),
         (Some(_), _) => user.clone(),
@@ -158,7 +158,7 @@ pub fn set_enabled(id: &str, enabled: bool) -> Result<(), String> {
     let fail = |e: std::io::Error| format!("Impossibile modificare «{name}»: {}", io_err(e));
     let active = is_true(&kv, "Hidden") != Some(true) && is_true(&kv, "X-GNOME-Autostart-enabled") != Some(false);
     if from_system && enabled && active {
-        // la voce di sistema è già attiva: basta togliere la copia dell'utente
+        // the system entry is already active: just remove the user copy
         return if own.is_some() { std::fs::remove_file(&user).map_err(fail) } else { Ok(()) };
     }
     let mut text = set_key(&std::fs::read_to_string(&src).map_err(fail)?, "Hidden", if enabled { "false" } else { "true" });

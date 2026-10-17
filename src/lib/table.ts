@@ -1,6 +1,6 @@
 import type { Snippet } from "svelte";
 
-/** Colonna di DataTable: `sort` dà il valore di ordinamento, `cell` disegna la cella. */
+/** DataTable column: `sort` returns the sort value, `cell` renders the cell. */
 export type Col<T> = {
   key: string;
   label: string;

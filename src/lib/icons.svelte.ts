@@ -1,5 +1,5 @@
-// Icone dei file locali. WebKitGTK rifiuta <img src="asset://…"> dalla pagina dell'app, ma fetch()
-// funziona: ogni file viene letto una volta e servito come blob dalla memoria.
+// Icons from local files. WebKitGTK rejects <img src="asset://…"> from the app page, but fetch()
+// works: each file is read once and served as a blob from memory.
 const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 const urls = $state<Record<string, string>>({});
 const pending = new Set<string>();
@@ -13,7 +13,7 @@ async function load(path: string) {
   } catch {}
 }
 
-/** URL mostrabile per un percorso di icona; null finché non è pronto. */
+/** Displayable URL for an icon path; null until it is ready. */
 export function iconUrl(path?: string | null): string | null {
   if (!path || path.startsWith("glyph:")) return null;
   if (!isTauri) return path;

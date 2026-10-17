@@ -1,4 +1,4 @@
-// Formattazione all'italiana: virgola decimale, punto per le migliaia.
+// Italian-style formatting: decimal comma, dot as thousands separator.
 
 const nf = (d: number) =>
   new Intl.NumberFormat("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: "always" });
@@ -50,10 +50,10 @@ export function uptime(sec: number): string {
   return `${m} min`;
 }
 
-/** Scala percettiva (radice quadrata): rende visibili anche i consumi piccoli. */
+/** Perceptual scale (square root): makes even small usage visible. */
 export const meter = (v: number | null, full: number) => (!v || v <= 0 || !full ? 0 : Math.min(1, Math.sqrt(v / full)));
 
-/** Durata leggibile: "45 s", "12 min", "2 h 14 min". */
+/** Readable duration: "45 s", "12 min", "2 h 14 min". */
 export function dur(sec: number): string {
   if (sec < 1) return sec > 0 ? "meno di 1 s" : "0 s";
   if (sec < 60) return `${Math.round(sec)} s`;
@@ -63,7 +63,7 @@ export function dur(sec: number): string {
   return m % 60 ? `${h} h ${m % 60} min` : `${h} h`;
 }
 
-/** Quanto tempo fa, da un istante unix in secondi. */
+/** How long ago, from a unix timestamp in seconds. */
 export function ago(ts: number): string {
   if (!ts) return "—";
   const s = Date.now() / 1000 - ts;

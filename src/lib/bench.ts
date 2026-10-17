@@ -1,4 +1,4 @@
-// Misura delle prestazioni dell'interfaccia nell'app vera (gestione-attivita --bench).
+// UI performance measurement in the real app (gestione-attivita --bench).
 import { tick } from "svelte";
 import { app, type Page } from "./state.svelte";
 import { flags } from "./motion.svelte";
@@ -7,13 +7,13 @@ async function cpu(): Promise<[number, number, number]> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<[number, number, number]>("bench_cpu");
 }
-/** consumo di app e KWin (in % di un core) e fotogrammi mentre si resta fermi per ms */
+/** app and KWin usage (in % of one core) and frames while staying idle for ms */
 async function idleCost(ms: number) {
   const a = await cpu();
   const gaps = await gapsDuring(ms);
   const b = await cpu();
   const dt = b[2] - a[2];
-  return `app ${f1(((b[0] - a[0]) / dt) * 100)}%, KWin ${f1(((b[1] - a[1]) / dt) * 100)}%, ${f1(1000 / (gaps.reduce((x, y) => x + y, 0) / gaps.length))} fps, ${gaps.filter((g) => g > 25).length} scatti`;
+  return `app ${f1(((b[0] - a[0]) / dt) * 100)}%, KWin ${f1(((b[1] - a[1]) / dt) * 100)}%, ${f1(1000 / (gaps.reduce((x, y) => x + y, 0) / gaps.length))} fps, ${gaps.filter((g) => g > 25).length} janks`;
 }
 
 export const tickCost: number[] = [];
@@ -28,10 +28,10 @@ const f1 = (v: number) => v.toFixed(1);
 function stats(a: number[]) {
   const s = [...a].sort((x, y) => x - y);
   const avg = s.reduce((x, y) => x + y, 0) / (s.length || 1);
-  return `media ${f1(avg)} ms, p95 ${f1(s[Math.floor(s.length * 0.95)] ?? 0)} ms, max ${f1(s[s.length - 1] ?? 0)} ms`;
+  return `mean ${f1(avg)} ms, p95 ${f1(s[Math.floor(s.length * 0.95)] ?? 0)} ms, max ${f1(s[s.length - 1] ?? 0)} ms`;
 }
 
-/** Intervalli tra fotogrammi durante un'azione (per contare gli scatti delle animazioni). */
+/** Intervals between frames during an action (to count animation stutters). */
 async function gapsDuring(ms: number): Promise<number[]> {
   const gaps: number[] = [];
   let prev = await frame();
@@ -44,7 +44,7 @@ async function gapsDuring(ms: number): Promise<number[]> {
   return gaps;
 }
 
-/** Fotogrammi durante un'azione: intervalli tra requestAnimationFrame. */
+/** Frames during an action: intervals between requestAnimationFrame calls. */
 async function frames(ms: number, step?: (i: number) => void) {
   const gaps: number[] = [];
   let prev = await frame();
@@ -57,7 +57,7 @@ async function frames(ms: number, step?: (i: number) => void) {
     prev = t;
   }
   const jank = gaps.filter((g) => g > 25).length;
-  return `${gaps.length} fotogrammi, ${f1(1000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length))} fps, ${jank} scatti oltre 25 ms, peggiore ${f1(Math.max(...gaps))} ms`;
+  return `${gaps.length} frames, ${f1(1000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length))} fps, ${jank} frames over 25 ms, worst ${f1(Math.max(...gaps))} ms`;
 }
 
 export async function runBench(): Promise<string> {
@@ -68,16 +68,16 @@ export async function runBench(): Promise<string> {
   await settle();
   await new Promise((r) => setTimeout(r, 1500));
 
-  out.push(`Inattiva (6 s, aggiornamento ogni secondo): ${await frames(6000)}`);
-  // peso di ogni animazione periodica: si spengono una alla volta, poi tutte
+  out.push(`Idle (6 s, one update per second): ${await frames(6000)}`);
+  // cost of each periodic animation: turned off one at a time, then all
   const html = document.documentElement;
   const variants: [string, () => void][] = [
-    ["tutte accese, finestra in primo piano", () => {}],
-    ["finestra non in primo piano", () => {
+    ["all on, window focused", () => {}],
+    ["window not focused", () => {
       flags.focused = false;
       html.classList.add("calm");
     }],
-    ["tutte spente", () => {
+    ["all off", () => {
       html.classList.add("no-meter-anim");
       flags.glide = flags.flip = flags.tween = false;
     }],
@@ -87,26 +87,26 @@ export async function runBench(): Promise<string> {
     flags.glide = flags.flip = flags.tween = flags.focused = true;
     set();
     await new Promise((r) => setTimeout(r, 600));
-    out.push(`Animazioni ${name}: ${await idleCost(6000)}`);
+    out.push(`Animations ${name}: ${await idleCost(6000)}`);
   }
   html.classList.remove("no-meter-anim", "calm");
   flags.glide = flags.flip = flags.tween = flags.focused = true;
-  out.push(`Costo di un aggiornamento (dati + disegno): ${stats(tickCost.slice(-20))}`);
+  out.push(`Cost of one update (data + rendering): ${stats(tickCost.slice(-20))}`);
 
   const animGaps: number[] = [];
-  for (const round of ["primo", "secondo"]) {
+  for (const round of ["first", "second"]) {
     const t: string[] = [];
     for (const p of pages) {
       const t0 = performance.now();
       app.page = p;
       await settle();
       t.push(`${p} ${f1(performance.now() - t0)}`);
-      // l'animazione di entrata dura ~260 ms: si contano i fotogrammi lenti mentre scorre
+      // the entrance animation lasts ~260 ms: count slow frames while it runs
       animGaps.push(...(await gapsDuring(320)));
     }
-    out.push(`Cambio pagina (${round} giro, ms): ${t.join(", ")}`);
+    out.push(`Page switch (${round} round, ms): ${t.join(", ")}`);
   }
-  out.push(`Durante le animazioni di pagina: ${animGaps.length} fotogrammi, ${animGaps.filter((g) => g > 25).length} oltre 25 ms, peggiore ${f1(Math.max(...animGaps))} ms`);
+  out.push(`During page animations: ${animGaps.length} frames, ${animGaps.filter((g) => g > 25).length} over 25 ms, worst ${f1(Math.max(...animGaps))} ms`);
 
   app.page = "processes";
   await settle();
@@ -117,21 +117,21 @@ export async function runBench(): Promise<string> {
     await settle();
     typed.push(f1(performance.now() - t0));
   }
-  out.push(`Ricerca, per tasto (ms): ${typed.join(", ")}`);
-  // riordino animato: clic sulle intestazioni Nome e CPU, poi si osservano i fotogrammi
+  out.push(`Search, per keystroke (ms): ${typed.join(", ")}`);
+  // animated reordering: click the Nome and CPU headers, then watch the frames
   const heads = [...document.querySelectorAll<HTMLButtonElement>(".head .h")];
   const sortGaps: number[] = [];
   for (const label of ["Nome", "CPU", "Memoria", "CPU"]) {
     heads.find((h) => h.textContent?.trim().startsWith(label))?.click();
     sortGaps.push(...(await gapsDuring(450)));
   }
-  out.push(`Riordino animato (4 clic): ${sortGaps.length} fotogrammi, ${sortGaps.filter((g) => g > 25).length} oltre 25 ms, peggiore ${f1(Math.max(...sortGaps))} ms`);
+  out.push(`Animated re-sorting (4 clicks): ${sortGaps.length} frames, ${sortGaps.filter((g) => g > 25).length} over 25 ms, worst ${f1(Math.max(...sortGaps))} ms`);
 
   const rows = document.querySelector("[data-scroll]") as HTMLElement | null;
   if (rows) {
     rows.scrollTop = 0;
     const max = rows.scrollHeight - rows.clientHeight;
-    out.push(`Scorrimento processi (${rows.scrollHeight} px): ${await frames(3000, (i) => (rows.scrollTop = ((i * 24) % (2 * max)) < max ? (i * 24) % max : max - ((i * 24) % max)))}`);
+    out.push(`Scrolling Processes (${rows.scrollHeight} px): ${await frames(3000, (i) => (rows.scrollTop = ((i * 24) % (2 * max)) < max ? (i * 24) % max : max - ((i * 24) % max)))}`);
     rows.scrollTop = 0;
   }
 
@@ -140,11 +140,11 @@ export async function runBench(): Promise<string> {
   const drows = document.querySelector("[data-scroll]") as HTMLElement | null;
   if (drows) {
     const max = drows.scrollHeight - drows.clientHeight;
-    out.push(`Scorrimento Dettagli (${drows.scrollHeight} px): ${await frames(3000, (i) => (drows.scrollTop = (i * 24) % Math.max(1, max)))}`);
+    out.push(`Scrolling Details (${drows.scrollHeight} px): ${await frames(3000, (i) => (drows.scrollTop = (i * 24) % Math.max(1, max)))}`);
   }
-  out.push(`Elementi nel DOM in Dettagli: ${document.querySelectorAll("*").length}`);
+  out.push(`DOM elements on Details: ${document.querySelectorAll("*").length}`);
   app.page = "processes";
   await settle();
-  out.push(`Elementi nel DOM in Processi: ${document.querySelectorAll("*").length}`);
+  out.push(`DOM elements on Processes: ${document.querySelectorAll("*").length}`);
   return out.join("\n");
 }

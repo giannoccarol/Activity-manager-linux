@@ -1,5 +1,5 @@
-//! GPU: utilizzo per motore e per processo dalle statistiche DRM (fdinfo) del kernel;
-//! NVIDIA interrogata solo se già attiva e in uso (non viene mai risvegliata).
+//! GPU: per-engine and per-process usage from the kernel's DRM stats (fdinfo);
+//! NVIDIA is queried only if already active and in use (it is never woken up).
 use super::procs::{Key, Sample};
 use crate::model::Gpu;
 use crate::util::{read, read_raw, run, which};
@@ -158,13 +158,13 @@ impl Gpus {
                 }
             }
         }
-        // sfalsa le riscansioni tra i processi
+        // stagger rescans across processes
         let stagger = if self.drm_fds.contains_key(&key) { 0 } else { (pid as u64) % 10 };
         self.drm_fds.insert(key, (fds.clone(), nv, self.tick.saturating_sub(stagger)));
         (fds, nv)
     }
 
-    /// Calcola l'uso GPU per processo e restituisce lo stato delle GPU.
+    /// Computes per-process GPU usage and returns the GPU state.
     pub fn collect(&mut self, procs: &mut [Sample], owners: &HashMap<Key, (u32, bool, String)>) -> Vec<Gpu> {
         self.tick += 1;
         let now = Instant::now();

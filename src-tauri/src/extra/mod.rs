@@ -1,4 +1,4 @@
-//! Dati delle pagine secondarie: cronologia app, rete per app, app di avvio, servizi.
+//! Data for the secondary pages: app history, per-app network, startup apps, services.
 pub mod history;
 pub mod netapp;
 pub mod services;

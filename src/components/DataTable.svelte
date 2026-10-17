@@ -24,13 +24,13 @@
     selected?: string | null;
     sortKey?: string;
     sortDir?: 1 | -1;
-    /** raggruppa le righe sotto intestazioni (titolo, ordine) */
+    /** groups rows under headers (title, order) */
     group?: (r: T) => [string, number];
     onmenu?: (e: MouseEvent, r: T) => void;
     onopen?: (r: T) => void;
     onkey?: (e: KeyboardEvent, r: T) => void;
     empty?: string;
-    /** altezza fissa di una riga: serve a disegnare solo quelle visibili */
+    /** fixed row height: needed to render only the visible ones */
     rowHeight?: number;
   } = $props();
 
@@ -76,7 +76,7 @@
     return [...m.values()].sort((a, b) => a.order - b.order);
   });
 
-  // elenco piatto (intestazioni di sezione + righe) con la posizione di ciascun elemento
+  // flat list (section headers + rows) with the position of each item
   type Item = { head: true; title: string; count: number; top: number } | { head: false; r: T; k: string; top: number };
   const flat = $derived.by(() => {
     const items: Item[] = [];
@@ -296,7 +296,7 @@
     text-align: center;
     color: var(--muted);
   }
-  /* utilità comuni alle celle delle pagine */
+  /* utilities shared by the pages' cells */
   .cell :global(.t) {
     overflow: hidden;
     text-overflow: ellipsis;

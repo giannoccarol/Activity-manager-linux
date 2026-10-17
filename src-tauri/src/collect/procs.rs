@@ -1,9 +1,9 @@
-//! Scansione dei processi da /proc: CPU, memoria privata, I/O, dati statici in cache.
+//! Process scan from /proc: CPU, private memory, I/O, cached static data.
 use crate::util::read_raw;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-pub type Key = (i32, u64); // (pid, istante di avvio in tick)
+pub type Key = (i32, u64); // (pid, start time in ticks)
 
 pub struct Static {
     pub name: String,

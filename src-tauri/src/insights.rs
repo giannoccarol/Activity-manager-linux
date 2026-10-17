@@ -1,4 +1,4 @@
-//! Diagnosi: quando una risorsa è al limite spiega chi la sta consumando e perché.
+//! Diagnosis: when a resource is at its limit, explains who is consuming it and why.
 use crate::fmt::{num, pct, rate, size};
 use crate::model::{Culprit, Group, Insight, Section, Snapshot};
 
@@ -24,7 +24,7 @@ fn top<'a, F: Fn(&Group) -> f64>(s: &'a Snapshot, f: F) -> Vec<&'a Group> {
 
 pub fn analyze(s: &Snapshot) -> Vec<Insight> {
     let mut out = vec![];
-    // ------------------------------------------------------------- disco
+    // ------------------------------------------------------------- disk
     let busy = s.disks.iter().max_by(|a, b| a.active.total_cmp(&b.active));
     if let Some(d) = busy.filter(|d| d.active >= 80.0) {
         let total = s.disks.iter().map(|d| d.read + d.write).sum::<f64>().max(1.0);
@@ -60,7 +60,7 @@ pub fn analyze(s: &Snapshot) -> Vec<Insight> {
             out.push(Insight { res: "disk".into(), level: level.into(), title, sentence, culprit: None, others: others("") });
         }
     }
-    // ------------------------------------------------------------- memoria
+    // ------------------------------------------------------------- memory
     if s.mem.pct >= 88.0 {
         let t = top(s, |g| g.mem as f64);
         if let Some(g) = t.first() {
@@ -77,7 +77,7 @@ pub fn analyze(s: &Snapshot) -> Vec<Insight> {
             });
         }
     }
-    // ------------------------------------------------------------- CPU e temperatura
+    // ------------------------------------------------------------- CPU and temperature
     let hot = s.cpu.temp.map(|t| t >= 95.0).unwrap_or(false);
     if s.cpu.total >= 85.0 || hot {
         let t = top(s, |g| g.cpu);

@@ -10,7 +10,7 @@
   import Switch from "../components/Switch.svelte";
   import ContextMenu, { type MenuItem } from "../components/ContextMenu.svelte";
 
-  // App che partono all'accesso (cartelle autostart di XDG), attivabili e disattivabili come in KDE.
+  // Apps that start at login (XDG autostart folders), can be enabled and disabled as in KDE.
   let items = $state<StartupItem[]>([]);
   let loaded = $state(false);
   let selected = $state<string | null>(null);

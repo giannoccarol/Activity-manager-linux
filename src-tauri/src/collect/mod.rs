@@ -1,4 +1,4 @@
-//! Raccolta completa: processi raggruppati per app/container/servizio, risorse di sistema, GPU.
+//! Full collection: processes grouped by app/container/service, system resources, GPU.
 pub mod gpu;
 pub mod procs;
 pub mod sys;
@@ -141,7 +141,7 @@ impl Collector {
         if label.is_empty() {
             label = unit.to_string();
         }
-        // id in stile DNS inverso senza .desktop (es. org.chromium.Chromium) → ultimo segmento
+        // reverse-DNS style id without .desktop (e.g. org.chromium.Chromium) → last segment
         if !label.contains(' ') && label.matches('.').count() >= 2 {
             if let Some(last) = label.rsplit('.').next().filter(|s| !s.is_empty()) {
                 let mut c = last.chars();
@@ -160,7 +160,7 @@ impl Collector {
         self.icons.resolve(&icon)
     }
 
-    /// Icona di un singolo processo: dal suo .desktop, dal tema per nome, o dalla mappa dei servizi noti.
+    /// Icon of a single process: from its .desktop, from the theme by name, or from the known services map.
     fn any_proc_icon(&mut self, exe: &str, name: &str) -> Option<String> {
         let k = (exe.to_string(), name.to_string());
         if let Some(v) = self.picons.get(&k) {
@@ -375,7 +375,7 @@ impl Collector {
     }
 }
 
-/// Icone del tema per servizi e demoni comuni, cercate per parola chiave nel nome dell'unità o del processo.
+/// Theme icons for common services and daemons, matched by keyword in the unit or process name.
 fn service_icon(n: &str) -> Option<&'static str> {
     const MAP: &[(&[&str], &str)] = &[
         (&["docker", "containerd", "podman", "conmon", "crun", "runc"], "glyph:container"),

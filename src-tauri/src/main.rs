@@ -1,16 +1,16 @@
-// Nasconde la console su Windows in release (no-op su Linux).
+// Hides the console on Windows in release builds (no-op on Linux).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    // Wayland: il permesso di attivazione che KDE dà al processo lanciato dalla scorciatoia va
-    // passato come argomento, così l'istanza già aperta (che riceve solo gli argomenti) può usarlo.
+    // Wayland: the activation token KDE gives the process launched by the shortcut must be
+    // passed as an argument, so the already running instance (which only receives the arguments) can use it.
     let token = std::env::var("XDG_ACTIVATION_TOKEN").or_else(|_| std::env::var("DESKTOP_STARTUP_ID")).ok().filter(|t| !t.is_empty());
     if let Some(t) = token {
         if !std::env::args().any(|a| a.starts_with("--activation-token=")) {
             use std::os::unix::process::CommandExt;
             if let Ok(exe) = std::env::current_exe() {
                 let err = std::process::Command::new(exe).args(std::env::args().skip(1)).arg(format!("--activation-token={t}")).exec();
-                eprintln!("riavvio con il permesso di attivazione non riuscito: {err}");
+                eprintln!("restart with activation token failed: {err}");
             }
         }
     }

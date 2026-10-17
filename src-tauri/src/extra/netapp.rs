@@ -1,5 +1,5 @@
-//! Rete per app: velocità TCP per socket da `ss` (byte confermati/ricevuti), attribuite ai gruppi
-//! dell'istantanea tramite il cgroup del socket (o il PID se `ss` non lo riporta).
+//! Per-app network: per-socket TCP rates from `ss` (bytes acked/received), attributed to the snapshot
+//! groups via the socket's cgroup (or the PID if `ss` does not report it).
 use crate::cgroup;
 use crate::model::{Section, Snapshot};
 use crate::util::{read_raw, run};
@@ -52,7 +52,7 @@ fn num(s: &str, key: &str) -> Option<u64> {
     rest[..end].parse().ok()
 }
 
-/// Righe di `ss -tuineH`/`ss -tuinpH`: "netid stato recv-q send-q locale remoto [extra]" e, per TCP, una riga rientrata con i contatori.
+/// Lines of `ss -tuineH`/`ss -tuinpH`: "netid state recv-q send-q local remote [extra]" and, for TCP, an indented line with the counters.
 fn parse(out: &str) -> Vec<Sock> {
     let mut socks: Vec<Sock> = vec![];
     let mut open = false;
@@ -77,7 +77,7 @@ fn parse(out: &str) -> Vec<Sock> {
     socks
 }
 
-/// Host e porta da "1.2.3.4:443", "[2a00::1]:443", "[::ffff:1.2.3.4]:443", "10.0.0.1%wlan0:67".
+/// Host and port from "1.2.3.4:443", "[2a00::1]:443", "[::ffff:1.2.3.4]:443", "10.0.0.1%wlan0:67".
 fn split_addr(a: &str) -> (&str, &str) {
     let (host, port) = match a.strip_prefix('[') {
         Some(r) => r.rsplit_once("]:").unwrap_or((r.trim_end_matches(']'), "")),
@@ -91,7 +91,7 @@ fn is_local(host: &str) -> bool {
     host == "::1" || host == "localhost" || host.starts_with("127.")
 }
 
-/// Percorso dell'unità systemd del processo (come le chiavi dei gruppi non-app).
+/// Path of the process's systemd unit (like the keys of non-app groups).
 fn unit_path(pid: i32) -> String {
     read_raw(format!("/proc/{pid}/cgroup"))
         .and_then(|t| t.lines().find_map(|l| l.strip_prefix("0::").map(|p| cgroup::parse(p.trim()).unit_path)))
@@ -110,7 +110,7 @@ impl NetApps {
             return vec![];
         }
         let socks = parse(&out);
-        // versioni di ss senza il campo cgroup: si ripiega sui PID (più lento)
+        // ss versions without the cgroup field: fall back to PIDs (slower)
         if !self.by_pid && !socks.is_empty() && socks.iter().all(|s| s.cg.is_none()) {
             self.by_pid = true;
         }
@@ -156,7 +156,7 @@ impl NetApps {
             let (mut rx, mut tx) = (0.0, 0.0);
             if s.tcp {
                 if let Some(dt) = dt {
-                    // socket nuovo dall'ultimo campione (o contatori ripartiti da zero): conta tutto
+                    // socket new since the last sample (or counters reset to zero): count everything
                     let (pr, pt) = self.prev.get(&(s.local.clone(), s.peer.clone())).copied().unwrap_or((0, 0));
                     let d = |c: u64, p: u64| if c >= p { c - p } else { c };
                     rx = d(s.rx, pr) as f64 / dt;

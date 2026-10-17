@@ -8,7 +8,7 @@
   import DataTable from "../components/DataTable.svelte";
   import AppIcon from "../components/AppIcon.svelte";
 
-  // Consumo per utente; sotto, le app dell'utente selezionato.
+  // Usage per user; below, the selected user's apps.
   type U = { name: string; procs: number; cpu: number; mem: number; disk: number; gpu: number; groups: Group[] };
 
   let me = $state("");

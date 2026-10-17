@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Pulsanti finestra in stile Breeze, a destra come in KDE.
+  // Breeze-style window buttons, on the right as in KDE.
   import { windowCmd } from "../lib/api";
   import Icon from "./Icon.svelte";
 </script>

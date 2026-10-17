@@ -5,115 +5,116 @@
 <h1 align="center">Gestione attività</h1>
 
 <p align="center">
-  Il Task Manager di Windows, rifatto per Linux e KDE Plasma.<br>
-  <strong>Ctrl+Alt+Canc</strong> e <strong>Ctrl+Maiusc+Esc</strong> funzionano come ti aspetti, e quando qualcosa è al 100% ti dice subito perché.
+  The Windows Task Manager, rebuilt for Linux and KDE Plasma.<br>
+  <strong>Ctrl+Alt+Del</strong> and <strong>Ctrl+Shift+Esc</strong> work the way you expect, and when something hits 100% it tells you why.
 </p>
 
 <p align="center">
   <a href="https://github.com/giannoccarol/Activity-manager-linux/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/giannoccarol/Activity-manager-linux?label=release&color=2f7cf6"></a>
+  <a href="LICENSE"><img alt="License: GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-2f7cf6"></a>
   <img alt="Linux" src="https://img.shields.io/badge/Linux-KDE%20Plasma%206%20%C2%B7%20Wayland-1d99f3">
   <img alt="Rust + Tauri" src="https://img.shields.io/badge/Rust%20%2B%20Tauri%202-Svelte%205-f46623">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/processi-vetro.png" alt="Gestione attività, pagina Processi con il tema Vetro">
+  <img src="docs/screenshots/processes-glass.png" alt="Gestione attività, Processes page with the Glass theme">
 </p>
 
-> **In English:** a Windows-style task manager for Linux (KDE Plasma 6, Wayland), written in Rust + Tauri 2 with a Svelte 5 UI. Ctrl+Alt+Del opens a Windows-like security screen, Ctrl+Shift+Esc opens the app. Processes are grouped by app, container and service; when CPU, disk, memory or temperature hit the limit it tells you which app is responsible and offers a one-click fix. Real KWin background blur, app history, startup apps, per-app network, users, details and systemd services. The UI is in Italian.
+> The user interface is currently in Italian (*Gestione attività* means "Task Manager"). Everything else, from this page to the code, is in English.
 
 ---
 
-## Perché
+## Why
 
-Su Windows, quando il computer rallenta, premi Ctrl+Alt+Canc e in due secondi vedi chi sta consumando cosa. Su Linux gli strumenti ci sono, ma sono sparsi tra terminale e monitor di sistema, e nessuno risponde alla domanda che conta: **perché** il disco è al 100%?
+On Windows, when the computer slows down, you press Ctrl+Alt+Del and within two seconds you can see what is using what. On Linux the tools exist, but they are scattered between the terminal and system monitors, and none of them answers the question that matters: **why** is the disk at 100%?
 
-Gestione attività mette tutto in una finestra familiare, legge i dati direttamente dal kernel e ragiona su di essi:
+Gestione attività puts everything into a familiar window, reads the data straight from the kernel and reasons about it:
 
-> **Disco al 97%**: **postgres-dev** sta scrivendo 845 MB/s, il 99% di tutto l'I/O del disco, e le altre app ne risentono.
-> &nbsp;&nbsp;&nbsp;&nbsp;`Mostra` · `Metti in pausa` · `Arresta`
+> **Disk at 97%**: **postgres-dev** is writing 845 MB/s, 99% of all disk I/O, and the other apps are suffering.
+> &nbsp;&nbsp;&nbsp;&nbsp;`Show` · `Pause` · `Stop`
 
-## Cosa fa
+## Features
 
-**Le due scorciatoie di Windows**
-- **Ctrl+Alt+Canc** apre una schermata a tutto schermo su ogni monitor: Blocca, Cambia utente, Esci, Gestione attività, più Sospendi, Riavvia e Arresta.
-- **Ctrl+Maiusc+Esc** apre l'app, o la riporta in primo piano anche se è ridotta a icona (con il permesso di attivazione di Wayland).
+**The two Windows shortcuts**
+- **Ctrl+Alt+Del** opens a full-screen security screen on every monitor: Lock, Switch user, Sign out, Task Manager, plus Sleep, Restart and Shut down.
+- **Ctrl+Shift+Esc** opens the app, or brings it back to the front even when it is minimized (using the Wayland activation token).
 
-**Processi**
-- Raggruppati come in Windows: **App**, **Container** (Docker e Podman, con nome e immagine), **In background**, **Di sistema**. Il raggruppamento usa i cgroup di systemd, quindi un'app con 40 processi resta una riga sola.
-- CPU, memoria, disco e GPU per gruppo e per processo, con il motore GPU in uso (3D, video, copia…).
-- Ricerca per nome, PID o riga di comando. Ordinamento per colonna, con le righe che scivolano nella nuova posizione.
-- Azioni: termina, termina forzatamente, sospendi e riprendi, **modalità efficienza** (priorità CPU e I/O minime), apri il percorso, copia la riga di comando, proprietà. Sui container: pausa, riavvio, log e shell nel terminale.
-- Per i processi di altri utenti chiede la password con la finestra di sistema (pkexec), invece di fallire in silenzio.
+**Processes**
+- Grouped like on Windows: **Apps**, **Containers** (Docker and Podman, with name and image), **Background** and **System**. Grouping is based on systemd cgroups, so an app with 40 processes stays a single row.
+- CPU, memory, disk and GPU per group and per process, with the GPU engine in use (3D, video, copy…).
+- Search by name, PID or command line. Sort by any column, with rows gliding into their new position.
+- Actions: end task, force end, suspend and resume, **efficiency mode** (lowest CPU and I/O priority), open file location, copy command line, properties. For containers: pause, restart, logs and a shell in the terminal.
+- For processes owned by other users it asks for the password through the system dialog (pkexec) instead of failing silently.
 
-**Diagnosi**
-- Disco, memoria, CPU, temperatura e GPU al limite: individua l'app responsabile, dice quanto pesa sul totale e propone l'azione giusta (pausa per un container, efficienza o chiusura per un'app).
-- Se l'app resta nella barra di sistema, ti avvisa anche con una notifica, al massimo ogni 30 minuti, con "Ignora per 2 ore".
+**Diagnosis**
+- When disk, memory, CPU, temperature or GPU hit the limit, it finds the app responsible, says how much of the total it accounts for and offers the right action: pause a container, put an app in efficiency mode or close it.
+- While the app sits in the system tray, it also sends a notification, at most every 30 minutes, with "Ignore for 2 hours".
 
-**Prestazioni**
-- CPU complessiva e per core, frequenza e temperatura; memoria e swap; ogni disco con letture e scritture; ogni rete con il nome Wi-Fi; ogni GPU (Intel, AMD, NVIDIA).
-- La GPU NVIDIA dei portatili ibridi **non viene mai svegliata** solo per leggerne lo stato.
-- Per ogni risorsa, l'elenco di chi la sta usando.
+**Performance**
+- Overall and per-core CPU, frequency and temperature; memory and swap; every disk with reads and writes; every network with its Wi-Fi name; every GPU (Intel, AMD, NVIDIA).
+- The NVIDIA GPU of hybrid laptops is **never woken up** just to read its state.
+- For each resource, the list of who is using it.
 
-**Le altre pagine, come in Windows**
-- **Cronologia app**: tempo CPU, disco, GPU e memoria massima per app, oggi, negli ultimi 7 o 30 giorni (SQLite locale).
-- **App di avvio**: attiva e disattiva le app che partono all'accesso, come le Impostazioni di sistema di KDE.
-- **Rete**: velocità per app e verso quali indirizzi, più lo stato delle interfacce.
-- **Utenti**: consumo per utente e le sue app.
-- **Dettagli**: tutti i processi in un elenco piatto, con PID, utente, thread, priorità e riga di comando.
-- **Servizi**: servizi systemd di sistema e dell'utente; avvia, arresta, riavvia, avvio automatico, registro.
+**The other pages, as on Windows**
+- **App history**: CPU time, disk, GPU and peak memory per app, for today, the last 7 days or the last 30 days (local SQLite).
+- **Startup apps**: enable and disable the apps that start at login, the same way KDE System Settings does.
+- **Network**: throughput per app and which addresses it talks to, plus the state of the interfaces.
+- **Users**: usage per user and their apps.
+- **Details**: every process in a flat list, with PID, user, threads, priority and command line.
+- **Services**: system and user systemd services; start, stop, restart, start at boot, journal.
 
-**Aspetto**
-- Tre temi minimali: **Grafite** (scuro), **Carta** (chiaro), **Vetro**. Il Vetro usa una finestra trasparente con la **sfocatura reale di KWin** su ciò che sta dietro (protocollo Wayland `ext-background-effect-v1`), non un'immagine di sfondo.
-- Pulsanti della finestra a destra come in KDE, angoli arrotondati con un contorno sottile.
-- Animazioni brevi e curate: indicatori che scorrono tra le voci, pagine che entrano, righe che si riordinano, numeri che salgono. Quelle legate agli aggiornamenti girano solo con la finestra in primo piano.
+**Look and feel**
+- Three minimal themes: **Graphite** (dark), **Paper** (light) and **Glass**. Glass uses a transparent window with **real KWin blur** of whatever is behind it (Wayland protocol `ext-background-effect-v1`), not a background picture.
+- Window buttons on the right as in KDE, rounded corners with a thin outline.
+- Short, polished animations: indicators that glide between items, pages that slide in, rows that reorder, numbers that count up. The ones tied to live updates only run while the window is focused.
 
-**Leggera**
+**Lightweight**
 
-Misurata sull'app installata, con l'aggiornamento ogni secondo:
+Measured on the installed app, refreshing every second:
 
-| | Consumo (Intel Core Ultra 7 155H) |
+| | CPU usage (Intel Core Ultra 7 155H) |
 |---|---|
-| Finestra aperta, in primo piano, con le animazioni | circa 20% di un core |
-| Finestra aperta, non in primo piano | circa 10% |
-| Nascosta nella barra di sistema | meno dell'1% |
+| Window open and focused, with animations | about 20% of one core |
+| Window open, not focused | about 10% |
+| Hidden in the system tray | less than 1% |
 
-## Screenshot
+## Screenshots
 
-Gli screenshot usano dati dimostrativi.
+The screenshots use demo data.
 
 | | |
 |---|---|
-| ![Processi](docs/screenshots/processi.png) | ![Prestazioni, tema Vetro](docs/screenshots/prestazioni-vetro.png) |
-| **Processi**, tema Grafite | **Prestazioni**, tema Vetro |
-| ![Schermata Ctrl+Alt+Canc](docs/screenshots/ctrl-alt-canc.png) | ![Processi, tema Carta](docs/screenshots/processi-chiaro.png) |
-| **Ctrl+Alt+Canc** | **Processi**, tema Carta |
-| ![Cronologia app](docs/screenshots/cronologia.png) | ![Rete](docs/screenshots/rete.png) |
-| **Cronologia app** | **Rete** |
-| ![Servizi](docs/screenshots/servizi.png) | ![App di avvio](docs/screenshots/avvio.png) |
-| **Servizi** | **App di avvio** |
-| ![Dettagli](docs/screenshots/dettagli.png) | ![Utenti](docs/screenshots/utenti.png) |
-| **Dettagli** | **Utenti** |
-| ![Impostazioni](docs/screenshots/impostazioni.png) | ![Prestazioni](docs/screenshots/prestazioni.png) |
-| **Impostazioni** | **Prestazioni**, tema Grafite |
+| ![Processes](docs/screenshots/processes.png) | ![Performance, Glass theme](docs/screenshots/performance-glass.png) |
+| **Processes**, Graphite theme | **Performance**, Glass theme |
+| ![Ctrl+Alt+Del screen](docs/screenshots/ctrl-alt-del.png) | ![Processes, Paper theme](docs/screenshots/processes-paper.png) |
+| **Ctrl+Alt+Del** | **Processes**, Paper theme |
+| ![App history](docs/screenshots/history.png) | ![Network](docs/screenshots/network.png) |
+| **App history** | **Network** |
+| ![Services](docs/screenshots/services.png) | ![Startup apps](docs/screenshots/startup.png) |
+| **Services** | **Startup apps** |
+| ![Details](docs/screenshots/details.png) | ![Users](docs/screenshots/users.png) |
+| **Details** | **Users** |
+| ![Settings](docs/screenshots/settings.png) | ![Performance](docs/screenshots/performance.png) |
+| **Settings** | **Performance**, Graphite theme |
 
-## Requisiti
+## Requirements
 
-- **KDE Plasma 6 su Wayland** (consigliato). Le scorciatoie globali e il tema Vetro sono pensati per KDE; il resto funziona anche altrove.
-- Librerie di sistema:
+- **KDE Plasma 6 on Wayland** (recommended). The global shortcuts and the Glass theme are designed for KDE; everything else works elsewhere too.
+- System libraries:
 
-| Distribuzione | Pacchetti |
+| Distribution | Packages |
 |---|---|
 | Arch, CachyOS, Manjaro | `webkit2gtk-4.1 gtk3 libayatana-appindicator libnotify` |
 | Fedora | `webkit2gtk4.1 gtk3 libayatana-appindicator-gtk3 libnotify` |
 | Debian, Ubuntu | `libwebkit2gtk-4.1-0 libgtk-3-0 libayatana-appindicator3-1 libnotify-bin` |
 
-Facoltativi: `docker` o `podman` per i container, `nvidia-utils` per i dati della GPU NVIDIA, `librsvg` per le icone PNG.
+Optional: `docker` or `podman` for containers, `nvidia-utils` for NVIDIA GPU data, `librsvg` for PNG icons.
 
-## Installazione
+## Installation
 
-### Dalla release
+### From the release
 
-Il binario della release è compilato su Arch Linux (x86_64) e richiede glibc 2.39 o più recente (Ubuntu 24.04, Fedora 40, Debian 13 e successive). Su distribuzioni più vecchie, compila dai sorgenti.
+The release binary is built on Arch Linux (x86_64) and needs glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
 ```bash
 tar xf gestione-attivita-2.0.0-linux-x86_64.tar.gz
@@ -121,15 +122,15 @@ cd gestione-attivita-2.0.0-linux-x86_64
 ./install.sh
 ```
 
-Lo script installa tutto nella tua home, senza `sudo`:
-- l'app in `~/.local/share/gestione-attivita/bin`, con un collegamento in `~/.local/bin`;
-- le voci di menu e l'icona;
-- l'avvio all'accesso nella barra di sistema, così Ctrl+Alt+Canc risponde all'istante;
-- le scorciatoie Ctrl+Alt+Canc e Ctrl+Maiusc+Esc. Ctrl+Alt+Canc viene tolto da "Esci" di KDE, e una copia di `kglobalshortcutsrc` resta come backup.
+The script installs everything in your home directory, without `sudo`:
+- the app in `~/.local/share/gestione-attivita/bin`, with a link in `~/.local/bin`;
+- the menu entries and the icon;
+- start at login, hidden in the system tray, so Ctrl+Alt+Del responds instantly;
+- the Ctrl+Alt+Del and Ctrl+Shift+Esc shortcuts. Ctrl+Alt+Del is taken away from KDE's "Log Out", and a copy of `kglobalshortcutsrc` is kept as a backup.
 
-### Dai sorgenti
+### From source
 
-Servono [Rust](https://rustup.rs) 1.80 o più recente, Node.js 20 o più recente e le librerie di sviluppo di WebKitGTK 4.1 ([prerequisiti di Tauri](https://tauri.app/start/prerequisites/)).
+You need [Rust](https://rustup.rs) 1.80 or newer, Node.js 20 or newer and the WebKitGTK 4.1 development libraries ([Tauri prerequisites](https://tauri.app/start/prerequisites/)).
 
 ```bash
 git clone https://github.com/giannoccarol/Activity-manager-linux.git
@@ -139,76 +140,80 @@ npx tauri build
 ./install.sh
 ```
 
-### Disinstallazione
+### Uninstall
 
 ```bash
 ./uninstall.sh
 ```
 
-Riporta Ctrl+Alt+Canc a "Esci" di KDE. Cronologia e impostazioni restano in `~/.local/share/gestione-attivita` e `~/.config/gestione-attivita`.
+It gives Ctrl+Alt+Del back to KDE's "Log Out". History and settings stay in `~/.local/share/gestione-attivita` and `~/.config/gestione-attivita`.
 
-## Come funziona
+## How it works
 
 ```
-┌──────────────────────────── backend Rust ────────────────────────────┐
-│ /proc, cgroup v2, /sys (dischi, rete, hwmon), DRM fdinfo (GPU)       │
-│ systemd, docker/podman, ss, file .desktop e tema di icone            │
-│        │                                                             │
-│  raccolta ogni secondo ──► diagnosi ──► istantanea leggera ──────────┼──► evento "snapshot"
-│        │                                                             │
-│  cronologia (SQLite) · avvisi · barra di sistema · scorciatoie KDE   │
-└──────────────────────────────────────────────────────────────────────┘
-                                                        │
-┌──────────────────────── interfaccia Svelte 5 ─────────▼──────────────┐
-│ stato non reattivo in profondità ($state.raw) · tabelle virtualizzate │
-│ grafici SVG · animazioni solo su trasformazioni e opacità            │
-└──────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────── Rust backend ─────────────────────────────┐
+│ /proc, cgroup v2, /sys (disks, network, hwmon), DRM fdinfo (GPU)       │
+│ systemd, docker/podman, ss, .desktop files and the icon theme          │
+│        │                                                               │
+│  sampling every second ──► diagnosis ──► lightweight snapshot ─────────┼──► "snapshot" event
+│        │                                                               │
+│  history (SQLite) · alerts · system tray · KDE shortcuts               │
+└────────────────────────────────────────────────────────────────────────┘
+                                                          │
+┌─────────────────────────── Svelte 5 interface ──────────▼──────────────┐
+│ non-deep reactive state ($state.raw) · virtualized tables              │
+│ SVG charts · animations on transform and opacity only                  │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Niente servizi aggiuntivi**: l'app legge direttamente i file del kernel, non serve un demone con privilegi.
-- **Raggruppamento per app**: ogni processo viene ricondotto alla sua unità systemd (`app-…scope`, `….service`, `docker-….scope`), poi al file `.desktop` per nome e icona.
-- **Diagnosi**: per il disco confronta l'I/O dei cgroup con quello del dispositivo; per la temperatura cerca chi usa la CPU; per la memoria guarda anche lo swap in corso.
-- **Leggerezza**:
-  - i campi che non cambiano (nome, comando, icona) arrivano all'interfaccia una volta sola;
-  - a finestra nascosta la raccolta rallenta a un campione ogni 3 secondi;
-  - le tabelle lunghe disegnano solo le righe visibili;
-  - nessuna animazione infinita, perché col vetro KWin ricalcolerebbe la sfocatura a ogni fotogramma.
-- **Wayland**: la schermata Ctrl+Alt+Canc va a tutto schermo su ogni monitor tramite GTK; la sfocatura usa `ext-background-effect-v1`; il permesso di attivazione (`XDG_ACTIVATION_TOKEN`) passa dalla nuova istanza a quella già aperta.
+- **No extra services**: the app reads the kernel files directly; no privileged daemon is needed.
+- **Grouping by app**: every process is traced back to its systemd unit (`app-…scope`, `….service`, `docker-….scope`), then to its `.desktop` file for name and icon.
+- **Diagnosis**: for the disk it compares cgroup I/O with the device; for temperature it looks at who is using the CPU; for memory it also considers swap activity.
+- **Lightweight**:
+  - fields that do not change (name, command line, icon) reach the interface only once;
+  - while the window is hidden, sampling slows down to once every 3 seconds;
+  - long tables only render the visible rows;
+  - there are no infinite animations, because with the Glass theme KWin would recompute the blur on every frame.
+- **Wayland**: the Ctrl+Alt+Del screen goes full screen on every monitor through GTK; the blur uses `ext-background-effect-v1`; the activation token (`XDG_ACTIVATION_TOKEN`) is passed from the new instance to the one already running.
 
-## Sviluppo
+## Development
 
 ```bash
-npm run dev          # interfaccia nel browser con dati dimostrativi (http://localhost:1420)
-npx tauri dev        # app completa con dati reali
+npm run dev          # interface in the browser with demo data (http://localhost:1420)
+npx tauri dev        # full app with real data
 ```
 
-Opzioni utili dell'eseguibile:
+Useful command line options:
 
-| Opzione | Effetto |
+| Option | Effect |
 |---|---|
-| `--tray` | parte nascosta nella barra di sistema |
-| `--secure` | apre la schermata Ctrl+Alt+Canc |
-| `--dump` | stampa un'istantanea dei dati in JSON ed esce |
-| `--bench` | misura fluidità, cambio pagina, ricerca, scorrimento e consumo; risultati in `~/.cache/gestione-attivita/bench.txt` |
-| `--apply-shortcuts`, `--remove-shortcuts` | assegna o toglie le scorciatoie di KDE |
+| `--tray` | start hidden in the system tray |
+| `--secure` | open the Ctrl+Alt+Del screen |
+| `--dump` | print a JSON snapshot of the data and exit |
+| `--bench` | measure smoothness, page switching, search, scrolling and CPU usage; results in `~/.cache/gestione-attivita/bench.txt` |
+| `--apply-shortcuts`, `--remove-shortcuts` | assign or remove the KDE shortcuts |
 
-Struttura:
+Layout:
 
 ```
-src/                 interfaccia (Svelte 5, TypeScript)
-  pages/             una pagina per voce del menu, più la schermata Ctrl+Alt+Canc
-  components/        tabella processi, grafici, menu, finestre di dialogo…
-  lib/               stato, formattazione italiana, animazioni, misura
+src/                 interface (Svelte 5, TypeScript)
+  pages/             one page per menu entry, plus the Ctrl+Alt+Del screen
+  components/        process table, charts, menus, dialogs…
+  lib/               state, Italian number formatting, animations, benchmark
 src-tauri/src/
-  collect/           processi, sistema (CPU, memoria, dischi, rete), GPU
-  extra/             cronologia, rete per app, app di avvio, servizi
-  insights.rs        diagnosi ("perché è al 100%")
-  actions.rs         terminare, sospendere, efficienza, container…
-  blur.rs            sfocatura reale di KWin
-  session.rs         blocca, cambia utente, esci, alimentazione
-  settings.rs        impostazioni, scorciatoie KDE, avvio automatico
+  collect/           processes, system (CPU, memory, disks, network), GPU
+  extra/             app history, per-app network, startup apps, services
+  insights.rs        diagnosis ("why is it at 100%")
+  actions.rs         end, suspend, efficiency mode, containers…
+  blur.rs            real KWin blur
+  session.rs         lock, switch user, sign out, power
+  settings.rs        settings, KDE shortcuts, autostart
 ```
 
 ## Privacy
 
-Tutto resta sul tuo computer: l'app non usa la rete e non invia dati a nessuno. La cronologia è un file SQLite in `~/.local/share/gestione-attivita/history.sqlite`.
+Everything stays on your computer: the app does not use the network and sends no data anywhere. The history is a SQLite file in `~/.local/share/gestione-attivita/history.sqlite`.
+
+## License
+
+Gestione attività is free software, released under the [GNU General Public License v3.0 or later](LICENSE).

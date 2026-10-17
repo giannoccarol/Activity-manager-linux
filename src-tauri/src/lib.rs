@@ -1,4 +1,4 @@
-//! Gestione attività — backend Tauri.
+//! Gestione attività — Tauri backend.
 mod actions;
 mod blur;
 mod cgroup;
@@ -28,18 +28,18 @@ struct AppState {
     settings: Arc<Mutex<Settings>>,
     history: Arc<Mutex<extra::history::History>>,
     netapps: Mutex<extra::netapp::NetApps>,
-    /// Avviata solo per la schermata Ctrl+Alt+Canc: alla chiusura esce, se non resta nella barra.
+    /// Started only for the Ctrl+Alt+Del screen: exits on close, unless it stays in the tray.
     secure_only: AtomicBool,
-    /// L'interfaccia è stata (ri)caricata: va reinviato tutto, campi statici compresi.
+    /// The UI was (re)loaded: everything must be resent, static fields included.
     resync: Arc<AtomicBool>,
 }
 
-// ------------------------------------------------------------------ finestre
+// ------------------------------------------------------------------ windows
 
-/// Raggio degli angoli della finestra (deve coincidere con --win-r in app.css).
+/// Window corner radius (must match --win-r in app.css).
 const WIN_R: i32 = 12;
 
-/// Sfocatura reale di KWin dietro una finestra (tema Vetro e schermata di sicurezza).
+/// Real KWin blur behind a window (Glass theme and security screen).
 fn glass(app: &AppHandle, label: &str, on: bool) {
     let Some(w) = app.get_webview_window(label) else { return };
     let label = label.to_string();
@@ -55,8 +55,8 @@ fn main_glass_on(app: &AppHandle) -> bool {
     app.state::<AppState>().settings.lock().map(|s| s.theme == "glass").unwrap_or(false)
 }
 
-/// Consegna a GTK il permesso di attivazione di Wayland ricevuto dalla scorciatoia: senza, KWin
-/// non lascia riportare in primo piano (né togliere dall'icona) una finestra già esistente.
+/// Hands GTK the Wayland activation token received from the shortcut: without it, KWin
+/// will not raise (or unminimize) an already existing window.
 fn present(app: &AppHandle, label: &str, token: Option<String>) {
     let Some(w) = app.get_webview_window(label) else { return };
     let _ = app.run_on_main_thread(move || {
@@ -101,7 +101,7 @@ fn close_secure(app: &AppHandle) {
     }
 }
 
-/// Schermata Ctrl+Alt+Canc a tutto schermo su ogni monitor; i pulsanti stanno sul principale.
+/// Full-screen Ctrl+Alt+Del screen on every monitor; the buttons are on the primary one.
 fn open_secure(app: &AppHandle) {
     open_secure_with(app, None);
 }
@@ -167,7 +167,7 @@ fn after_secure(app: &AppHandle) {
     }
 }
 
-/// Cattura il contenuto di una finestra dell'app in PNG (diagnostica: `gestione-attivita --snapshot=/percorso.png[:etichetta]`).
+/// Captures the contents of an app window as PNG (diagnostics: `gestione-attivita --snapshot=/path.png[:label]`).
 fn snapshot_window(app: &AppHandle, arg: &str) {
     let (path, label) = arg.split_once(':').map(|(p, l)| (p.to_string(), l.to_string())).unwrap_or((arg.to_string(), "main".into()));
     let Some(w) = app.get_webview_window(&label) else { return };
@@ -184,7 +184,7 @@ fn snapshot_window(app: &AppHandle, arg: &str) {
     });
 }
 
-// ------------------------------------------------------------------ barra di sistema
+// ------------------------------------------------------------------ system tray
 
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     if app.tray_by_id("main").is_some() {
@@ -207,9 +207,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-// ------------------------------------------------------------------ raccolta e avvisi
+// ------------------------------------------------------------------ collection and alerts
 
-/// Avvisi rimandati dall'utente con «Ignora per 2 ore», per risorsa.
+/// Alerts snoozed by the user with «Ignora per 2 ore» ("ignore for 2 hours"), per resource.
 fn snoozed() -> &'static Mutex<HashMap<String, Instant>> {
     static S: std::sync::OnceLock<Mutex<HashMap<String, Instant>>> = std::sync::OnceLock::new();
     S.get_or_init(|| Mutex::new(HashMap::new()))
@@ -243,7 +243,7 @@ fn start_collector(app: &AppHandle, st: &AppState) {
     }
     let (app, last, iv, settings, history, resync) = (app.clone(), st.last.clone(), st.interval_ms.clone(), st.settings.clone(), st.history.clone(), st.resync.clone());
     std::thread::Builder::new()
-        .name("raccolta".into())
+        .name("collector".into())
         .spawn(move || {
             let mut c = collect::Collector::new();
             let mut sent: HashMap<String, Instant> = HashMap::new();
@@ -258,7 +258,7 @@ fn start_collector(app: &AppHandle, st: &AppState) {
                     h.record(&snap, dt);
                 }
                 let win = app.get_webview_window("main");
-                // ridotta a icona o nascosta: niente invii, l'interfaccia non spreca CPU a ridisegnare
+                // minimized or hidden: nothing is sent, so the UI does not waste CPU redrawing
                 let visible = win.as_ref().map(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(false)).unwrap_or(false);
                 let focused = visible && win.as_ref().map(|w| w.is_focused().unwrap_or(false)).unwrap_or(false);
                 if visible {
@@ -283,11 +283,11 @@ fn start_collector(app: &AppHandle, st: &AppState) {
                 if let Ok(mut l) = last.lock() {
                     *l = Some(snap);
                 }
-                // finestra non visibile: basta un campione ogni 3 s per cronologia e avvisi
+                // window not visible: one sample every 3 s is enough for history and alerts
                 let ms = iv.load(Ordering::Relaxed).max(250);
                 let ms = if visible { ms } else { ms.max(3000) };
                 let deadline = t0 + Duration::from_millis(ms);
-                // se la finestra torna visibile si riprende subito il ritmo normale
+                // if the window becomes visible again, the normal pace resumes immediately
                 while Instant::now() < deadline {
                     std::thread::sleep(Duration::from_millis(100).min(deadline.saturating_duration_since(Instant::now())));
                     if !visible && app.get_webview_window("main").map(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(false)).unwrap_or(false) {
@@ -296,14 +296,14 @@ fn start_collector(app: &AppHandle, st: &AppState) {
                 }
             }
         })
-        .expect("thread di raccolta");
+        .expect("collector thread");
 }
 
-// ------------------------------------------------------------------ comandi
+// ------------------------------------------------------------------ commands
 
 #[tauri::command]
 fn start_monitor(app: AppHandle, state: State<AppState>) {
-    // l'interfaccia è appena stata caricata: riceverà tutto completo al prossimo giro
+    // the UI has just been loaded: it will receive everything in full on the next round
     state.resync.store(true, Ordering::SeqCst);
     start_collector(&app, &state);
     if let Some(s) = state.last.lock().ok().and_then(|l| l.clone()) {
@@ -313,7 +313,7 @@ fn start_monitor(app: AppHandle, state: State<AppState>) {
     }
 }
 
-/// Risultati di `--bench`: in ~/.cache/gestione-attivita/bench.txt, con il peso dei dati inviati.
+/// `--bench` results: in ~/.cache/gestione-attivita/bench.txt, with the size of the data sent.
 #[tauri::command]
 fn bench_report(state: State<AppState>, text: String) {
     let (full, steady) = state
@@ -331,10 +331,10 @@ fn bench_report(state: State<AppState>, text: String) {
         .unwrap_or((0, 0));
     let dir = util::home().join(".cache/gestione-attivita");
     let _ = std::fs::create_dir_all(&dir);
-    let _ = std::fs::write(dir.join("bench.txt"), format!("{text}\nDati inviati: {} KB al primo invio, poi {} KB a ogni aggiornamento\n", full / 1024, steady / 1024));
+    let _ = std::fs::write(dir.join("bench.txt"), format!("{text}\nData sent: {} KB on the first update, then {} KB per update\n", full / 1024, steady / 1024));
 }
 
-/// Tick di CPU accumulati da app (processo + figli WebKit) e KWin, con l'istante: per `--bench`.
+/// CPU ticks accumulated by the app (process + WebKit children) and KWin, with the timestamp: for `--bench`.
 #[tauri::command]
 fn bench_cpu() -> (f64, f64, f64) {
     let hz = unsafe { libc::sysconf(libc::_SC_CLK_TCK) } as f64;
@@ -482,12 +482,12 @@ async fn service_action(unit: String, scope: String, verb: String) -> Result<Str
     extra::services::action(&unit, &scope, &verb)
 }
 
-/// Assegna (o toglie, ripristinando Esci su Ctrl+Alt+Canc) le scorciatoie di KDE. Usata dall'installazione.
+/// Assigns (or removes, restoring Log Out on Ctrl+Alt+Del) the KDE shortcuts. Used by the installer.
 pub fn shortcuts(on: bool) -> bool {
     settings::apply_shortcuts(on)
 }
 
-/// Stampa un'istantanea in JSON (diagnostica: `gestione-attivita --dump`).
+/// Prints a snapshot as JSON (diagnostics: `gestione-attivita --dump`).
 pub fn dump() {
     let mut c = collect::Collector::new();
     c.collect();
@@ -540,7 +540,7 @@ pub fn run() {
             let tray = st.settings.lock().map(|s| s.tray).unwrap_or(false);
             if tray || tray_only {
                 if let Err(e) = build_tray(&h) {
-                    eprintln!("barra di sistema non disponibile: {e}");
+                    eprintln!("system tray unavailable: {e}");
                 }
             }
             if secure {
@@ -592,9 +592,9 @@ pub fn run() {
             service_action
         ])
         .build(tauri::generate_context!())
-        .expect("errore all'avvio di Gestione attività")
+        .expect("failed to start Gestione attività")
         .run(|app, e| {
-            // alla chiusura la cronologia ancora in memoria va scritta sul disco
+            // on exit, history still in memory must be written to disk
             if let tauri::RunEvent::Exit = e {
                 if let Ok(mut h) = app.state::<AppState>().history.lock() {
                     *h = extra::history::History::open();

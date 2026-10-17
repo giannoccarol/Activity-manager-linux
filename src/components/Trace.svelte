@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Traccia in stile oscilloscopio con reticolo da strumento. A ogni campione scivola di un passo in
-  // 240 ms e poi si ferma: movimento fluido, ma per tre quarti del tempo non si ridisegna nulla.
+  // Oscilloscope-style trace with an instrument graticule. On each sample it glides one step in
+  // 240 ms and then stops: smooth motion, but for three quarters of the time nothing is redrawn.
   import { ambient, flags } from "../lib/motion.svelte";
   import type { Sample } from "../lib/state.svelte";
 

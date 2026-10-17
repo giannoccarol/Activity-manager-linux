@@ -1,4 +1,4 @@
-// Menu contestuale di un singolo processo (pagine Dettagli e Utenti).
+// Context menu for a single process (Details and Users pages).
 import { act } from "./api";
 import { ui } from "./ui.svelte";
 import type { Proc } from "./types";

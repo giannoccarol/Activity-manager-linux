@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Rimuove Gestione attività e riporta Ctrl+Alt+Canc a «Esci» di KDE.
-# Cronologia e impostazioni restano in ~/.local/share/gestione-attivita e ~/.config/gestione-attivita.
+# Removes Gestione attività and gives Ctrl+Alt+Del back to KDE's "Log Out".
+# History and settings stay in ~/.local/share/gestione-attivita and ~/.config/gestione-attivita.
 set -euo pipefail
 
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -15,4 +15,4 @@ rm -f "$DATA/applications/gestione-attivita.desktop" "$DATA/applications/gestion
 rm -f "$CONF/autostart/gestione-attivita.desktop"
 find "$DATA/icons/hicolor" -name "gestione-attivita.*" -delete 2>/dev/null || true
 kbuildsycoca6 >/dev/null 2>&1 || true
-echo "Gestione attività rimossa. Ctrl+Alt+Canc torna a «Esci»."
+echo "Gestione attività removed. Ctrl+Alt+Del is back to KDE's \"Log Out\"."

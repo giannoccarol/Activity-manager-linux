@@ -10,7 +10,7 @@
   import AppIcon from "../components/AppIcon.svelte";
   import Trace from "../components/Trace.svelte";
 
-  // Chi usa la rete adesso: velocità per app dai socket TCP/UDP, più lo stato delle interfacce.
+  // Who is using the network now: per-app speed from TCP/UDP sockets, plus interface status.
   let rows = $state<NetApp[]>([]);
   let loaded = $state(false);
   let selected = $state<string | null>(null);

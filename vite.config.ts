@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 
-// Configurazione consigliata da Tauri: porta fissa, nessun watch sulla parte Rust.
+// Tauri-recommended setup: fixed port, no watching of the Rust side.
 export default defineConfig({
   plugins: [svelte()],
   clearScreen: false,

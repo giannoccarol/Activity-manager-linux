@@ -1,4 +1,4 @@
-//! Cronologia app: consumo accumulato per app e per giorno in SQLite (stesso database della versione Python).
+//! App history: usage accumulated per app and per day in SQLite (same database as the Python version).
 use crate::desktop::Icons;
 use crate::model::{Section, Snapshot};
 use rusqlite::{params, Connection};
@@ -49,7 +49,7 @@ const UPSERT: &str = "INSERT INTO usage (day, app, kind, icon, cpu_s, disk_b, gp
         gpu_s = gpu_s + excluded.gpu_s, mem_peak = MAX(mem_peak, excluded.mem_peak),
         last = MAX(last, excluded.last)";
 
-/// Data locale (AAAA-MM-GG) di `back` giorni fa, come `datetime.date.today()` in Python.
+/// Local date (YYYY-MM-DD) from `back` days ago, like `datetime.date.today()` in Python.
 fn day(back: i64) -> String {
     unsafe {
         let now = libc::time(std::ptr::null_mut());
@@ -86,7 +86,7 @@ impl History {
         History { conn: open_db(), acc: HashMap::new(), last_flush: Instant::now(), icons: None }
     }
 
-    /// Chiamata a ogni campionamento (circa 1 s) dal thread di raccolta.
+    /// Called on every sample (about 1 s) from the collector thread.
     pub fn record(&mut self, snap: &Snapshot, dt: f64) {
         if !(dt > 0.0 && dt <= 30.0) {
             return;
@@ -95,7 +95,7 @@ impl History {
         let today = day(0);
         let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0);
         for g in &snap.groups {
-            // stesso nome della versione Python, così la cronologia continua tra le due
+            // same name as the Python version, so history carries over between the two
             let app = match (&g.image, g.section) {
                 (Some(img), Section::Ctr) => format!("{}  ·  {img}", g.label),
                 _ => g.label.clone(),
@@ -121,7 +121,7 @@ impl History {
         }
     }
 
-    /// Scrive gli accumuli in un'unica transazione; in caso di errore li conserva per il tentativo successivo.
+    /// Writes the accumulated values in a single transaction; on error keeps them for the next attempt.
     fn flush(&mut self) {
         self.last_flush = Instant::now();
         let Some(conn) = self.conn.as_mut() else { return };
@@ -151,12 +151,12 @@ impl History {
         if raw.starts_with("glyph:") {
             return Some(raw.to_string());
         }
-        // la versione Python salvava il nome dell'icona: lo si risolve nel file del tema
+        // the Python version stored the icon name: resolve it to the theme file
         let ic = self.icons.get_or_insert_with(|| Icons::new(true));
         ic.resolve(raw).or_else(|| ic.resolve(&app.to_lowercase()))
     }
 
-    /// Righe aggregate per app negli ultimi `days` giorni (1 = solo oggi).
+    /// Rows aggregated per app over the last `days` days (1 = today only).
     pub fn query(&mut self, days: u32) -> Vec<HistoryRow> {
         let since = day(days.max(1) as i64 - 1);
         let mut rows: Vec<(String, String, String, String, [f64; 5])> = vec![];

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Installa Gestione attività per l'utente corrente (KDE Plasma 6, Wayland):
-#   Ctrl+Alt+Canc   → schermata come in Windows (Blocca, Cambia utente, Esci, Gestione attività)
-#   Ctrl+Maiusc+Esc → Gestione attività
-# Cronologia e impostazioni restano. Un'eventuale versione precedente in Python va nel cestino.
+# Installs Gestione attività for the current user (KDE Plasma 6, Wayland):
+#   Ctrl+Alt+Del   → Windows-style security screen (Lock, Switch user, Sign out, Task Manager)
+#   Ctrl+Shift+Esc → Gestione attività
+# History and settings are kept. A previous Python version, if any, is moved to the trash.
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,7 +12,7 @@ DEST="$DATA/gestione-attivita"
 BIN="$HOME/.local/bin"
 APPS="$DATA/applications"
 ICONS="$DATA/icons/hicolor"
-# Due modi d'uso: dal pacchetto della release (eseguibile accanto allo script) o dai sorgenti.
+# Two ways to use it: from the release package (binary next to this script) or from the sources.
 if [ -x "$SRC/gestione-attivita" ] && [ ! -d "$SRC/src-tauri" ]; then
     EXE="$SRC/gestione-attivita"
     ICON_SVG="$SRC/icon.svg"
@@ -20,23 +20,23 @@ else
     EXE="$SRC/src-tauri/target/release/gestione-attivita"
     ICON_SVG="$SRC/src-tauri/icons/icon.svg"
     if [ ! -x "$EXE" ]; then
-        echo "→ Compilo l'app (la prima volta richiede qualche minuto)…"
+        echo "→ Building the app (the first build takes a few minutes)…"
         (cd "$SRC" && npm install --silent && npx tauri build)
     fi
 fi
 
-echo "→ Chiudo le versioni in esecuzione…"
+echo "→ Closing running instances…"
 pkill -f "gestione_attivita.py" 2>/dev/null || true
 pkill -f "$DEST/bin/gestione-attivita" 2>/dev/null || true
 sleep 0.5
 
-echo "→ Copio l'app in $DEST/bin…"
+echo "→ Copying the app to $DEST/bin…"
 mkdir -p "$DEST/bin" "$BIN" "$APPS" "$ICONS/scalable/apps"
 install -m 755 "$EXE" "$DEST/bin/gestione-attivita.new"
 mv -f "$DEST/bin/gestione-attivita.new" "$DEST/bin/gestione-attivita"
 ln -sfn "$DEST/bin/gestione-attivita" "$BIN/gestione-attivita"
 
-echo "→ Icona…"
+echo "→ Icon…"
 cp "$ICON_SVG" "$ICONS/scalable/apps/gestione-attivita.svg"
 for s in 32 48 64 128 256; do
     mkdir -p "$ICONS/${s}x${s}/apps"
@@ -46,13 +46,14 @@ for s in 32 48 64 128 256; do
 done
 touch "$ICONS" 2>/dev/null || true
 
-echo "→ Voci di menu…"
+echo "→ Menu entries…"
 cat > "$APPS/gestione-attivita.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=Gestione attività
 GenericName=Task Manager
-Comment=Processi, prestazioni, cronologia, rete, app di avvio, utenti e servizi
+Comment=Processes, performance, app history, network, startup apps, users and services
+Comment[it]=Processi, prestazioni, cronologia, rete, app di avvio, utenti e servizi
 Exec=$BIN/gestione-attivita
 Icon=gestione-attivita
 Terminal=false
@@ -65,8 +66,10 @@ DESKTOP
 cat > "$APPS/gestione-attivita-sicurezza.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Schermata Ctrl+Alt+Canc
-Comment=Blocca, cambia utente, esci o apri Gestione attività
+Name=Ctrl+Alt+Del screen
+Name[it]=Schermata Ctrl+Alt+Canc
+Comment=Lock, switch user, sign out or open the task manager
+Comment[it]=Blocca, cambia utente, esci o apri Gestione attività
 Exec=$BIN/gestione-attivita --secure
 Icon=gestione-attivita
 Terminal=false
@@ -77,13 +80,14 @@ DESKTOP
 update-desktop-database "$APPS" >/dev/null 2>&1 || true
 kbuildsycoca6 >/dev/null 2>&1 || true
 
-echo "→ Avvio all'accesso, nella barra di sistema (Ctrl+Alt+Canc risponde subito)…"
+echo "→ Start at login, in the system tray (so Ctrl+Alt+Del responds instantly)…"
 mkdir -p "$CONF/autostart" "$CONF/gestione-attivita"
 cat > "$CONF/autostart/gestione-attivita.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=Gestione attività
-Comment=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc
+Comment=Stays in the system tray, ready for Ctrl+Alt+Del
+Comment[it]=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc
 Exec=$BIN/gestione-attivita --tray
 Icon=gestione-attivita
 X-GNOME-Autostart-enabled=true
@@ -102,32 +106,32 @@ elif [ ! -f "$SETTINGS" ]; then
     printf '{\n  "theme": "graphite",\n  "intervalMs": 1000,\n  "alerts": true,\n  "tray": true,\n  "autostart": true,\n  "shortcuts": true\n}\n' > "$SETTINGS"
 fi
 
-echo "→ Scorciatoie da tastiera…"
+echo "→ Keyboard shortcuts…"
 SHORTCUTS="$CONF/kglobalshortcutsrc"
 [ -f "$SHORTCUTS" ] && [ ! -f "$SHORTCUTS.bak-gestione-attivita" ] && cp "$SHORTCUTS" "$SHORTCUTS.bak-gestione-attivita"
 if "$DEST/bin/gestione-attivita" --apply-shortcuts; then
-    echo "  Ctrl+Alt+Canc apre la schermata di sicurezza, Ctrl+Maiusc+Esc apre Gestione attività"
+    echo "  Ctrl+Alt+Del opens the security screen, Ctrl+Shift+Esc opens Gestione attività"
 else
-    echo "  KDE non ha risposto: assegna le scorciatoie da Impostazioni di sistema → Scorciatoie."
+    echo "  KDE did not respond: assign the shortcuts in System Settings → Shortcuts."
 fi
 
-echo "→ Controllo versioni precedenti…"
+echo "→ Checking for previous versions…"
 old=()
 for p in "$DEST/app" "$DEST/venv" "$CONF/gestione-attivita/gestione-attivita.conf"; do
     [ -e "$p" ] && old+=("$p")
 done
 if [ ${#old[@]} -gt 0 ]; then
     if command -v gio >/dev/null && gio trash "${old[@]}" 2>/dev/null; then
-        echo "  Nel cestino: ${old[*]}"
+        echo "  Moved to the trash: ${old[*]}"
     else
-        mkdir -p "$DEST/vecchia-versione-python"
-        mv "${old[@]}" "$DEST/vecchia-versione-python/"
-        echo "  Spostata in $DEST/vecchia-versione-python"
+        mkdir -p "$DEST/old-python-version"
+        mv "${old[@]}" "$DEST/old-python-version/"
+        echo "  Moved to $DEST/old-python-version"
     fi
 fi
 
-echo "→ Avvio nella barra di sistema…"
+echo "→ Starting in the system tray…"
 setsid "$DEST/bin/gestione-attivita" --tray >/dev/null 2>&1 < /dev/null &
 
 echo
-echo "Installata. Premi Ctrl+Alt+Canc o Ctrl+Maiusc+Esc."
+echo "Installed. Press Ctrl+Alt+Del or Ctrl+Shift+Esc."

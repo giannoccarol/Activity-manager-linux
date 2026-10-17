@@ -4,7 +4,7 @@
   import { iconUrl } from "../lib/icons.svelte";
   import Icon from "../components/Icon.svelte";
 
-  // Schermata Ctrl+Alt+Canc, come in Windows: blocca, cambia utente, esci, Gestione attività.
+  // Ctrl+Alt+Del screen, as in Windows: lock, switch user, sign out, Gestione attività.
   const primary = (window as unknown as { __PRIMARY__?: boolean }).__PRIMARY__ ?? true;
   let info = $state<{ user: string; fullName: string; avatar: string | null; host: string } | null>(null);
   let now = $state(new Date());
@@ -20,7 +20,7 @@
 
   async function session(verb: string) {
     powerOpen = false;
-    if (!isTauri) return console.info("[simulazione] sessione", verb);
+    if (!isTauri) return console.info("[mock] session", verb);
     const { invoke } = await import("@tauri-apps/api/core");
     await invoke("session", { verb });
   }
@@ -127,7 +127,7 @@
       opacity: 0;
     }
   }
-  /* la finestra è trasparente: KWin sfoca il desktop dietro, qui solo la velatura */
+  /* the window is transparent: KWin blurs the desktop behind it, here only the tint */
   .bg {
     position: absolute;
     inset: 0;

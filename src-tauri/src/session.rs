@@ -1,4 +1,4 @@
-//! Azioni di sessione per la schermata Ctrl+Alt+Canc: blocca, cambia utente, esci, alimentazione.
+//! Session actions for the Ctrl+Alt+Del screen: lock, switch user, log out, power.
 use crate::util::run_status;
 use std::time::Duration;
 
@@ -43,7 +43,7 @@ pub fn act(verb: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Nome completo, nome utente, avatar e nome del computer per la schermata di sicurezza.
+/// Full name, username, avatar and computer name for the security screen.
 pub fn info() -> serde_json::Value {
     let uid = unsafe { libc::getuid() };
     let pw = crate::util::read_raw("/etc/passwd").unwrap_or_default();

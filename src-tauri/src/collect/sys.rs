@@ -1,4 +1,4 @@
-//! Risorse di sistema: CPU, memoria, dischi, rete.
+//! System resources: CPU, memory, disks, network.
 use crate::model::{Cpu, Disk, Mem, Net};
 use crate::util::{read, read_raw, run, which};
 use std::collections::{HashMap, HashSet};

@@ -1,5 +1,5 @@
-//! Impostazioni persistenti (~/.config/gestione-attivita/impostazioni.json),
-//! scorciatoie globali di KDE e avvio automatico.
+//! Persistent settings (~/.config/gestione-attivita/impostazioni.json),
+//! KDE global shortcuts and autostart.
 use crate::util::{config_home, run_status, which};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -42,10 +42,10 @@ impl Settings {
     }
 }
 
-// ------------------------------------------------------------------ scorciatoie (kglobalaccel)
+// ------------------------------------------------------------------ shortcuts (kglobalaccel)
 
-const CAD: u32 = 218103815; // Ctrl+Alt+Canc (codice Qt)
-const CSE: u32 = 117440512; // Ctrl+Maiusc+Esc
+const CAD: u32 = 218103815; // Ctrl+Alt+Del (Qt key code)
+const CSE: u32 = 117440512; // Ctrl+Shift+Esc
 const LAUNCH: [&str; 4] = ["gestione-attivita.desktop", "_launch", "Gestione attività", "Gestione attività"];
 const SECURE: [&str; 4] = ["gestione-attivita-sicurezza.desktop", "_launch", "Schermata Ctrl+Alt+Canc", "Schermata Ctrl+Alt+Canc"];
 const LOGOUT: [&str; 4] = ["ksmserver", "Log Out", "", ""];
@@ -70,7 +70,7 @@ fn kga(method: &str, args: &[String]) -> bool {
     run_status("gdbus", &refs, Duration::from_secs(10)).0
 }
 
-/// Ctrl+Alt+Canc apre la schermata di sicurezza, Ctrl+Maiusc+Esc apre Gestione attività.
+/// Ctrl+Alt+Del opens the security screen, Ctrl+Shift+Esc opens Gestione attività.
 pub fn apply_shortcuts(on: bool) -> bool {
     if !which("gdbus") {
         return false;
@@ -91,7 +91,7 @@ pub fn apply_shortcuts(on: bool) -> bool {
     }
 }
 
-// ------------------------------------------------------------------ avvio automatico
+// ------------------------------------------------------------------ autostart
 
 pub fn apply_autostart(on: bool, exe: &Path) {
     let f = config_home().join("autostart/gestione-attivita.desktop");
