@@ -1,6 +1,7 @@
 // Settings: read from the backend, applied immediately in the UI (the theme also from localStorage, without flicker).
 import { isTauri } from "./api";
 import { ui } from "./ui.svelte";
+import { applyLanguage, i18n, type Lang, type LangPref } from "./i18n.svelte";
 
 export type Theme = "graphite" | "paper" | "glass";
 export type Settings = {
@@ -10,9 +11,10 @@ export type Settings = {
   tray: boolean;
   autostart: boolean;
   shortcuts: boolean;
+  language: LangPref;
 };
 
-const DEFAULTS: Settings = { theme: "graphite", intervalMs: 1000, alerts: true, tray: true, autostart: false, shortcuts: true };
+const DEFAULTS: Settings = { theme: "graphite", intervalMs: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto" };
 
 function storedTheme(): Theme | null {
   try {
@@ -34,9 +36,11 @@ class Store {
   async init() {
     if (isTauri) {
       try {
+        i18n.system = await invoke<Lang>("system_lang");
         this.v = await invoke<Settings>("get_settings");
       } catch {}
     }
+    applyLanguage(this.v.language ?? "auto");
     this.remember();
   }
 
@@ -49,12 +53,14 @@ class Store {
   async set(patch: Partial<Settings>) {
     const prev = this.v;
     this.v = { ...this.v, ...patch };
+    if (patch.language) applyLanguage(patch.language);
     this.remember();
     if (!isTauri) return;
     try {
       this.v = await invoke<Settings>("set_settings", { patch });
     } catch (e) {
       this.v = prev;
+      applyLanguage(prev.language ?? "auto");
       this.remember();
       ui.toast(String(e), "crit");
     }

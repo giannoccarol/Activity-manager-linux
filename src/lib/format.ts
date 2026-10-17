@@ -1,11 +1,12 @@
-// Italian-style formatting: decimal comma, dot as thousands separator.
+// Number and date formatting in the interface language (Italian: 1.234,5; English: 1,234.5).
+import { i18n, t } from "./i18n.svelte";
 
-const nf = (d: number) =>
-  new Intl.NumberFormat("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: "always" });
-const cache = new Map<number, Intl.NumberFormat>();
+const cache = new Map<string, Intl.NumberFormat>();
 export function num(v: number, d = 1): string {
-  let f = cache.get(d);
-  if (!f) cache.set(d, (f = nf(d)));
+  const tag = i18n.tag;
+  const k = `${tag}:${d}`;
+  let f = cache.get(k);
+  if (!f) cache.set(k, (f = new Intl.NumberFormat(tag, { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: "always" })));
   return f.format(v);
 }
 
@@ -45,9 +46,9 @@ export function uptime(sec: number): string {
   const d = Math.floor(sec / 86400);
   const h = Math.floor((sec % 86400) / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  if (d) return `${d} g ${h} h`;
-  if (h) return `${h} h ${m} min`;
-  return `${m} min`;
+  if (d) return t("format.daysHours", { d, h });
+  if (h) return t("format.hoursMinutes", { h, m });
+  return t("format.minutes", { m });
 }
 
 /** Perceptual scale (square root): makes even small usage visible. */
@@ -55,26 +56,26 @@ export const meter = (v: number | null, full: number) => (!v || v <= 0 || !full 
 
 /** Readable duration: "45 s", "12 min", "2 h 14 min". */
 export function dur(sec: number): string {
-  if (sec < 1) return sec > 0 ? "meno di 1 s" : "0 s";
-  if (sec < 60) return `${Math.round(sec)} s`;
+  if (sec < 1) return sec > 0 ? t("format.lessThanSecond") : t("format.seconds", { s: 0 });
+  if (sec < 60) return t("format.seconds", { s: Math.round(sec) });
   const m = Math.floor(sec / 60);
-  if (m < 60) return `${m} min`;
+  if (m < 60) return t("format.minutes", { m });
   const h = Math.floor(m / 60);
-  return m % 60 ? `${h} h ${m % 60} min` : `${h} h`;
+  return m % 60 ? t("format.hoursMinutes", { h, m: m % 60 }) : t("format.hours", { h });
 }
 
 /** How long ago, from a unix timestamp in seconds. */
 export function ago(ts: number): string {
   if (!ts) return "—";
   const s = Date.now() / 1000 - ts;
-  if (s < 60) return "adesso";
-  if (s < 3600) return `${Math.floor(s / 60)} min fa`;
+  if (s < 60) return t("format.justNow");
+  if (s < 3600) return t("format.minutesAgo", { m: Math.floor(s / 60) });
   const d = new Date(ts * 1000);
   const today = new Date();
-  const hm = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-  if (d.toDateString() === today.toDateString()) return `oggi alle ${hm}`;
+  const hm = d.toLocaleTimeString(i18n.tag, { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === today.toDateString()) return t("format.todayAt", { time: hm });
   const y = new Date(today);
   y.setDate(y.getDate() - 1);
-  if (d.toDateString() === y.toDateString()) return `ieri alle ${hm}`;
-  return d.toLocaleDateString("it-IT", { day: "numeric", month: "long" });
+  if (d.toDateString() === y.toDateString()) return t("format.yesterdayAt", { time: hm });
+  return d.toLocaleDateString(i18n.tag, { day: "numeric", month: "long" });
 }

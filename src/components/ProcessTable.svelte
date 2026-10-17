@@ -8,6 +8,7 @@
   import ContextMenu, { type MenuItem } from "./ContextMenu.svelte";
   import { flip } from "svelte/animate";
   import { away, easeOut, fadeq, flags, flipMs, rise } from "../lib/motion.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   let { filter = "all" }: { filter?: Section | "all" } = $props();
 
@@ -19,13 +20,8 @@
   let hover = $state<string | null>(null);
   const memTotal = $derived(app.snap?.mem.total ?? 1);
 
-  const SECTIONS: [Section, string][] = [
-    ["app", "App"],
-    ["ctr", "Container"],
-    ["bg", "In background"],
-    ["sys", "Di sistema"],
-  ];
-  const STATUS: Record<Status, string> = { running: "In esecuzione", stopped: "Sospeso", efficiency: "Efficienza", paused: "In pausa" };
+  // section order; titles are processes.sections.<section> and statuses processes.status.<status>
+  const SECTIONS: Section[] = ["app", "ctr", "bg", "sys"];
   const MiB = 1024 * 1024;
 
   function sortBy(k: Key) {
@@ -84,8 +80,8 @@
     for (const k of shownKeys) if (!keys.has(k)) changed++;
     bulk = changed > 6;
     shownKeys = keys;
-    return SECTIONS.filter(([s]) => filter === "all" || filter === s)
-      .map(([s, title]) => ({ s, title, groups: groups.filter((g) => g.section === s).sort(cmp) }))
+    return SECTIONS.filter((s) => filter === "all" || filter === s)
+      .map((s) => ({ s, groups: groups.filter((g) => g.section === s).sort(cmp) }))
       .filter((x) => x.groups.length);
   });
 
@@ -105,26 +101,26 @@
     const ctr = isGroup && target.section === "ctr";
     const key = isGroup ? target.key : null;
     const items: MenuItem[] = [];
-    if (isGroup && target.procs.length > 1) items.push({ label: open[target.key] ? "Comprimi" : "Espandi", run: () => (open[target.key] = !open[target.key]) });
+    if (isGroup && target.procs.length > 1) items.push({ label: t(open[target.key] ? "menu.collapse" : "menu.expand"), run: () => (open[target.key] = !open[target.key]) });
     if (ctr) {
       items.push(
-        { label: target.status === "paused" ? "Riprendi" : "Metti in pausa", icon: target.status === "paused" ? "play" : "pause", run: () => act("container", { verb: target.status === "paused" ? "unpause" : "pause", key }) },
-        { label: "Riavvia", icon: "restart", run: () => act("container", { verb: "restart", key }) },
-        { label: "Mostra log", icon: "terminal", run: () => act("container", { verb: "logs", key }) },
-        { label: "Apri una shell", icon: "terminal", run: () => act("container", { verb: "shell", key }) },
+        { label: t(target.status === "paused" ? "menu.resume" : "menu.pause"), icon: target.status === "paused" ? "play" : "pause", run: () => act("container", { verb: target.status === "paused" ? "unpause" : "pause", key }) },
+        { label: t("menu.restart"), icon: "restart", run: () => act("container", { verb: "restart", key }) },
+        { label: t("menu.showLogs"), icon: "terminal", run: () => act("container", { verb: "logs", key }) },
+        { label: t("menu.openShell"), icon: "terminal", run: () => act("container", { verb: "shell", key }) },
         { sep: true },
-        { label: "Arresta il container", icon: "stop", danger: true, run: () => act("container", { verb: "stop", key }) },
+        { label: t("menu.stopContainer"), icon: "stop", danger: true, run: () => act("container", { verb: "stop", key }) },
       );
     } else {
       items.push(
-        { label: "Termina attività", icon: "x", run: () => terminate(target) },
-        { label: "Termina forzatamente", danger: true, run: () => (isGroup ? act("terminate", { key, force: true }) : act("signal", { pid: target.pid, ctime: target.ctime, sig: "KILL" })) },
-        { label: target.status === "stopped" ? "Riprendi" : "Sospendi", icon: target.status === "stopped" ? "play" : "pause", run: () => act("suspend", { key, pid: isGroup ? null : target.pid, resume: target.status === "stopped" }) },
-        { label: "Modalità efficienza", icon: "leaf", checked: target.status === "efficiency", run: () => act("efficiency", { key, pid: isGroup ? null : target.pid, on: target.status !== "efficiency" }) },
+        { label: t("menu.endTask"), icon: "x", run: () => terminate(target) },
+        { label: t("menu.forceEnd"), danger: true, run: () => (isGroup ? act("terminate", { key, force: true }) : act("signal", { pid: target.pid, ctime: target.ctime, sig: "KILL" })) },
+        { label: t(target.status === "stopped" ? "menu.resume" : "menu.suspend"), icon: target.status === "stopped" ? "play" : "pause", run: () => act("suspend", { key, pid: isGroup ? null : target.pid, resume: target.status === "stopped" }) },
+        { label: t("menu.efficiency"), icon: "leaf", checked: target.status === "efficiency", run: () => act("efficiency", { key, pid: isGroup ? null : target.pid, on: target.status !== "efficiency" }) },
         { sep: true },
-        { label: "Apri percorso file", icon: "folder", run: () => act("open-location", { key, pid: isGroup ? null : target.pid }) },
-        { label: "Copia riga di comando", icon: "copy", run: () => navigator.clipboard?.writeText(isGroup ? target.procs[0]?.cmd ?? "" : target.cmd) },
-        { label: "Proprietà", icon: "info", run: () => act("properties", { key, pid: isGroup ? target.procs[0]?.pid : target.pid }) },
+        { label: t("menu.openLocation"), icon: "folder", run: () => act("open-location", { key, pid: isGroup ? null : target.pid }) },
+        { label: t("menu.copyCommandLine"), icon: "copy", run: () => navigator.clipboard?.writeText(isGroup ? target.procs[0]?.cmd ?? "" : target.cmd) },
+        { label: t("menu.properties"), icon: "info", run: () => act("properties", { key, pid: isGroup ? target.procs[0]?.pid : target.pid }) },
       );
     }
     menu = { x: e.clientX, y: e.clientY, items };
@@ -134,7 +130,7 @@
 <!-- a numeric cell is a single element: the meter bar is drawn in CSS from --p -->
 {#snippet numcell(v: number | null, kind: "cpu" | "mem" | "disk" | "gpu")}
   {#if v === null}
-    <span class="num na" title="Non leggibile senza privilegi">—</span>
+    <span class="num na" title={t("common.notReadable")}>—</span>
   {:else}
     <span class="num {kind}" style:--p={q(kind === "mem" ? meter(v, memTotal) : kind === "disk" ? meter(v, 200 * MiB) : meter(v, 100))}>
       {#if kind === "mem"}{num(v / MiB, 1)}<small>MB</small>
@@ -146,31 +142,31 @@
 
 {#snippet tools(target: Group | Proc, k: string, label: string)}
   {#if hover === k || app.selected === k}
-    <button class="kill" title="Termina" aria-label="Termina {label}" onclick={(e) => { e.stopPropagation(); terminate(target); }}><Icon name="x" size={14} stroke={1.8} /></button>
-    <button class="more" title="Altre azioni" aria-label="Altre azioni" onclick={(e) => { e.stopPropagation(); openMenu(e, target); }}><Icon name="kebab" size={16} stroke={2.4} /></button>
+    <button class="kill" title={t("processes.end")} aria-label={t("processes.endNamed", { name: label })} onclick={(e) => { e.stopPropagation(); terminate(target); }}><Icon name="x" size={14} stroke={1.8} /></button>
+    <button class="more" title={t("processes.moreActions")} aria-label={t("processes.moreActions")} onclick={(e) => { e.stopPropagation(); openMenu(e, target); }}><Icon name="kebab" size={16} stroke={2.4} /></button>
   {/if}
 {/snippet}
 
 {#snippet status(st: Status)}
-  <span class="status {st}"><i></i>{STATUS[st]}</span>
+  <span class="status {st}"><i></i>{t(`processes.status.${st}`)}</span>
 {/snippet}
 
-<div class="table" role="treegrid" aria-label="Processi">
+<div class="table" role="treegrid" aria-label={t("nav.processes")}>
   <div class="head" role="row">
-    {#each [["name", "Nome"], ["status", "Stato"], ["cpu", "CPU"], ["mem", "Memoria"], ["disk", "Disco"], ["gpu", "GPU"]] as [k, label]}
+    {#each [["name", t("common.name")], ["status", t("common.status")], ["cpu", "CPU"], ["mem", t("common.memory")], ["disk", t("common.disk")], ["gpu", "GPU"]] as [k, label]}
       <button class="h {k}" class:sorted={sortKey === k} onclick={() => sortBy(k as Key)} role="columnheader" aria-sort={sortKey === k ? (dir === 1 ? "ascending" : "descending") : "none"}>
         {label}
         {#if sortKey === k}<Icon name={dir === 1 ? "chev-up" : "chev-down"} size={12} stroke={2} />{/if}
       </button>
     {/each}
-    <span class="h engine">Motore GPU</span>
+    <span class="h engine">{t("processes.gpuEngine")}</span>
     <span class="h tools"></span>
   </div>
 
   <div class="rows" data-scroll>
     {#each sections as sec (sec.s)}
       {#if filter === "all"}
-        <div class="section" role="row"><span>{sec.title}</span><span class="count">{sec.groups.length}</span></div>
+        <div class="section" role="row"><span>{t(`processes.sections.${sec.s}`)}</span><span class="count">{sec.groups.length}</span></div>
       {/if}
       {#each sec.groups as g (g.key)}
         {@const multi = g.procs.length > 1}
@@ -195,7 +191,7 @@
           }}>
           <span class="name">
             {#if multi}
-              <button class="chev" class:open={isOpen} aria-label={isOpen ? "Comprimi" : "Espandi"} onclick={(e) => { e.stopPropagation(); open[g.key] = !open[g.key]; }}>
+              <button class="chev" class:open={isOpen} aria-label={t(isOpen ? "menu.collapse" : "menu.expand")} onclick={(e) => { e.stopPropagation(); open[g.key] = !open[g.key]; }}>
                 <Icon name="chev-right" size={14} stroke={2} />
               </button>
             {:else}<span class="chev-space"></span>{/if}
@@ -235,7 +231,7 @@
       {/each}
     {/each}
     {#if !sections.length}
-      <p class="empty">Nessun processo corrisponde a «{app.search}». Prova con il nome dell'app, il PID o una parte della riga di comando.</p>
+      <p class="empty">{t("processes.empty", { query: app.search })}</p>
     {/if}
   </div>
 </div>

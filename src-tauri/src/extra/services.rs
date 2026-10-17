@@ -1,4 +1,5 @@
 //! systemd services of the system and user managers: loaded units plus those that are only installed.
+use crate::i18n::{t, tf};
 use crate::util::{config_home, data_home, read_raw, run, unescape};
 use serde::Serialize;
 use serde_json::Value;
@@ -152,15 +153,8 @@ pub fn list() -> Vec<Service> {
     out
 }
 
-const VERBS: [(&str, &str, &str); 7] = [
-    ("start", "avviato", "avviare"),
-    ("stop", "arrestato", "arrestare"),
-    ("restart", "riavviato", "riavviare"),
-    ("enable", "abilitato all'avvio", "abilitare"),
-    ("disable", "disabilitato all'avvio", "disabilitare"),
-    ("mask", "mascherato", "mascherare"),
-    ("unmask", "smascherato", "smascherare"),
-];
+/// Allowed systemctl verbs; each has `services.done.<verb>` and `services.verb.<verb>` in the dictionaries.
+const VERBS: [&str; 7] = ["start", "stop", "restart", "enable", "disable", "mask", "unmask"];
 
 fn valid_unit(u: &str) -> bool {
     u.len() <= 256
@@ -179,7 +173,7 @@ fn systemctl(args: &[&str], timeout: Duration) -> Result<(bool, String), String>
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Impossibile avviare systemctl: {e}"))?;
+        .map_err(|e| tf("actions.spawnFailed", &[("cmd", "systemctl".into()), ("error", e.to_string())]))?;
     let mut stderr = child.stderr.take();
     let reader = std::thread::spawn(move || {
         let mut buf = String::new();
@@ -195,7 +189,7 @@ fn systemctl(args: &[&str], timeout: Duration) -> Result<(bool, String), String>
             Ok(None) if start.elapsed() > timeout => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err("systemctl non ha risposto entro un minuto".into());
+                return Err(t("services.timeout"));
             }
             Ok(None) => std::thread::sleep(Duration::from_millis(20)),
             Err(e) => return Err(format!("systemctl: {e}")),
@@ -205,16 +199,16 @@ fn systemctl(args: &[&str], timeout: Duration) -> Result<(bool, String), String>
 }
 
 pub fn action(unit: &str, scope: &str, verb: &str) -> Result<String, String> {
-    let Some(&(_, done, infinitive)) = VERBS.iter().find(|v| v.0 == verb) else {
-        return Err(format!("Azione non consentita: {verb}"));
-    };
+    if !VERBS.contains(&verb) {
+        return Err(tf("services.notAllowed", &[("verb", verb.to_string())]));
+    }
     if !valid_unit(unit) {
-        return Err(format!("Nome di servizio non valido: {unit}"));
+        return Err(tf("services.invalidName", &[("unit", unit.to_string())]));
     }
     let user = match scope {
         "user" => true,
         "system" => false,
-        _ => return Err(format!("Contesto non valido: {scope}")),
+        _ => return Err(tf("services.invalidScope", &[("scope", scope.to_string())])),
     };
     let mut args = vec![];
     if user {
@@ -228,20 +222,22 @@ pub fn action(unit: &str, scope: &str, verb: &str) -> Result<String, String> {
     let (ok, err) = res?;
     let name = unescape(unit.trim_end_matches(".service"));
     if ok {
-        return Ok(format!("Servizio «{name}» {done}"));
+        return Ok(tf(&format!("services.done.{verb}"), &[("name", name)]));
     }
+    let args = [("verb", t(&format!("services.verb.{verb}"))), ("name", name)];
     let low = err.to_lowercase();
     if ["access denied", "authentication", "not authorized", "authorization", "dismissed", "permission denied"].iter().any(|k| low.contains(k)) {
-        return Err(format!("Autorizzazione negata o annullata: impossibile {infinitive} «{name}»."));
+        return Err(tf("services.denied", &args));
     }
+    // systemctl runs with LC_ALL=C: the most common errors are translated, the others are shown as they are
     let why = if low.contains("not found") || low.contains("does not exist") {
-        "il servizio non esiste".to_string()
+        t("services.why.notFound")
     } else if low.contains("not loaded") {
-        "il servizio non è caricato".to_string()
+        t("services.why.notLoaded")
     } else if low.contains("job for") && low.contains("failed") {
-        format!("il servizio non è riuscito (dettagli con journalctl -xeu {unit})")
+        tf("services.why.failed", &[("unit", unit.to_string())])
     } else {
         err
     };
-    Err(if why.is_empty() { format!("Impossibile {infinitive} «{name}».") } else { format!("Impossibile {infinitive} «{name}»: {why}") })
+    Err(if why.is_empty() { tf("services.failed", &args) } else { tf("services.failedWhy", &[&args[..], &[("why", why)]].concat()) })
 }

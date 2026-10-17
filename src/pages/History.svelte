@@ -12,13 +12,10 @@
   import Switch from "../components/Switch.svelte";
   import Dialog from "../components/Dialog.svelte";
   import { app } from "../lib/state.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   // How much each app has used over time, from the history database.
-  const RANGES: [number, string][] = [
-    [1, "Oggi"],
-    [7, "7 giorni"],
-    [30, "30 giorni"],
-  ];
+  const RANGES = [1, 7, 30];
   let days = $state(1);
   let onlyApps = $state(true);
   let rows = $state<HistoryRow[]>([]);
@@ -50,7 +47,7 @@
     try {
       await invoke("history_clear", {}, () => null);
       rows = [];
-      ui.toast("Cronologia eliminata");
+      ui.toast(t("toasts.historyCleared"));
     } catch (e) {
       ui.toast(String(e), "crit");
     }
@@ -91,7 +88,7 @@
   <AppIcon src={r.icon} section={r.kind as Section} size={18} />
   <span class="t">{n}</span>
   {#if img}<span class="faint t">{img}</span>{/if}
-  {#if r.runs > 1}<span class="faint">{r.runs} avvii</span>{/if}
+  {#if r.runs > 1}<span class="faint">{t("history.runs", { count: r.runs })}</span>{/if}
 {/snippet}
 {#snippet cpu(r: Row)}
   <span class="share"><i style="transform: scaleX({totals ? Math.max(0.02, r.cpuS / totals) : 0})"></i></span><span class="dur">{dur(r.cpuS)}</span>
@@ -103,46 +100,46 @@
 
 <div class="pg">
   <div class="pg-bar">
-    <div class="pg-seg" role="radiogroup" aria-label="Periodo" use:pill>
-      {#each RANGES as [d, label]}
-        <button role="radio" aria-checked={days === d} class:on={days === d} onclick={() => (days = d)}>{label}</button>
+    <div class="pg-seg" role="radiogroup" aria-label={t("history.period")} use:pill>
+      {#each RANGES as d}
+        <button role="radio" aria-checked={days === d} class:on={days === d} onclick={() => (days = d)}>{d === 1 ? t("history.today") : t("history.days", { count: d })}</button>
       {/each}
     </div>
     <div class="pg-actions">
       <label class="only">
-        <Switch label="Solo app e container" checked={onlyApps} onchange={(v) => (onlyApps = v)} />
-        Solo app e container
+        <Switch label={t("history.onlyApps")} checked={onlyApps} onchange={(v) => (onlyApps = v)} />
+        {t("history.onlyApps")}
       </label>
-      <button class="btn" onclick={() => (confirm = true)} disabled={!rows.length}>Elimina cronologia</button>
+      <button class="btn" onclick={() => (confirm = true)} disabled={!rows.length}>{t("history.clear")}</button>
     </div>
   </div>
   <div class="pg-panel">
     <DataTable
-      label="Cronologia app"
+      label={t("nav.history")}
       rows={shown}
       rowKey={(r) => r.app}
       bind:selected
       bind:sortKey
       bind:sortDir
-      empty={loaded ? "Ancora nessun dato per questo periodo: la cronologia si riempie mentre l'app è aperta o nella barra di sistema." : "Carico la cronologia…"}
+      empty={loaded ? t("history.empty") : t("history.loading")}
       cols={[
-        { key: "name", label: "Nome", width: "minmax(220px, 1.4fr)", sort: (r) => r.app.toLowerCase(), cell: name },
-        { key: "cpu", label: "Tempo CPU", width: "minmax(170px, 1fr)", align: "right", sort: (r) => r.cpuS, cell: cpu },
-        { key: "disk", label: "Disco letto e scritto", width: "150px", align: "right", sort: (r) => r.diskB, cell: disk },
-        { key: "gpu", label: "Tempo GPU", width: "110px", align: "right", sort: (r) => r.gpuS, cell: gpu },
-        { key: "mem", label: "Memoria massima", width: "136px", align: "right", sort: (r) => r.memPeak, cell: mem },
-        { key: "last", label: "Ultima attività", width: "150px", sort: (r) => r.last, cell: last },
+        { key: "name", label: t("common.name"), width: "minmax(220px, 1.4fr)", sort: (r) => r.app.toLowerCase(), cell: name },
+        { key: "cpu", label: t("history.cpuTime"), width: "minmax(170px, 1fr)", align: "right", sort: (r) => r.cpuS, cell: cpu },
+        { key: "disk", label: t("history.diskIo"), width: "150px", align: "right", sort: (r) => r.diskB, cell: disk },
+        { key: "gpu", label: t("history.gpuTime"), width: "110px", align: "right", sort: (r) => r.gpuS, cell: gpu },
+        { key: "mem", label: t("history.peakMemory"), width: "136px", align: "right", sort: (r) => r.memPeak, cell: mem },
+        { key: "last", label: t("history.lastActive"), width: "150px", sort: (r) => r.last, cell: last },
       ] satisfies Col<Row>[]}
     />
   </div>
 </div>
 
 {#if confirm}
-  <Dialog title="Eliminare la cronologia?" onclose={() => (confirm = false)} width={440}>
-    <p class="msg">Si cancellano i consumi registrati di tutte le app, per tutti i giorni. Non si può annullare.</p>
+  <Dialog title={t("history.confirmTitle")} onclose={() => (confirm = false)} width={440}>
+    <p class="msg">{t("history.confirmText")}</p>
     {#snippet footer()}
-      <button class="btn" data-autofocus onclick={() => (confirm = false)}>Annulla</button>
-      <button class="btn primary" onclick={clear}>Elimina cronologia</button>
+      <button class="btn" data-autofocus onclick={() => (confirm = false)}>{t("common.cancel")}</button>
+      <button class="btn primary" onclick={clear}>{t("history.clear")}</button>
     {/snippet}
   </Dialog>
 {/if}

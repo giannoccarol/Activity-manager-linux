@@ -1,27 +1,28 @@
 // Context menu for a single process (Details and Users pages).
 import { act } from "./api";
 import { ui } from "./ui.svelte";
+import { t } from "./i18n.svelte";
 import type { Proc } from "./types";
 import type { MenuItem } from "../components/ContextMenu.svelte";
 
 export function procMenu(p: Proc): MenuItem[] {
   const id = { pid: p.pid, ctime: p.ctime };
   return [
-    { label: "Termina attività", icon: "x", run: () => act("signal", { ...id, sig: "TERM" }) },
-    { label: "Termina forzatamente", danger: true, run: () => act("signal", { ...id, sig: "KILL" }) },
+    { label: t("menu.endTask"), icon: "x", run: () => act("signal", { ...id, sig: "TERM" }) },
+    { label: t("menu.forceEnd"), danger: true, run: () => act("signal", { ...id, sig: "KILL" }) },
     { sep: true },
-    { label: p.status === "stopped" ? "Riprendi" : "Sospendi", icon: p.status === "stopped" ? "play" : "pause", run: () => act("suspend", { ...id, resume: p.status === "stopped" }) },
-    { label: "Modalità efficienza", icon: "leaf", checked: p.status === "efficiency", run: () => act("efficiency", { ...id, on: p.status !== "efficiency" }) },
+    { label: t(p.status === "stopped" ? "menu.resume" : "menu.suspend"), icon: p.status === "stopped" ? "play" : "pause", run: () => act("suspend", { ...id, resume: p.status === "stopped" }) },
+    { label: t("menu.efficiency"), icon: "leaf", checked: p.status === "efficiency", run: () => act("efficiency", { ...id, on: p.status !== "efficiency" }) },
     { sep: true },
-    { label: "Apri percorso file", icon: "folder", run: () => act("open-location", id) },
+    { label: t("menu.openLocation"), icon: "folder", run: () => act("open-location", id) },
     {
-      label: "Copia riga di comando",
+      label: t("menu.copyCommandLine"),
       icon: "copy",
       run: () => {
         navigator.clipboard?.writeText(p.cmd);
-        ui.toast("Riga di comando copiata");
+        ui.toast(t("toasts.commandLineCopied"));
       },
     },
-    { label: "Proprietà", icon: "info", run: () => act("properties", id) },
+    { label: t("menu.properties"), icon: "info", run: () => act("properties", id) },
   ];
 }

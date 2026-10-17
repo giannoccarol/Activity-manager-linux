@@ -1,6 +1,7 @@
 //! Startup apps: XDG autostart entries of the user (~/.config/autostart) and the system (/etc/xdg/autostart).
 //! Disabling a system entry creates a copy with Hidden=true in the user's folder, like System Settings.
 use crate::desktop::{parse_desktop, Icons};
+use crate::i18n::{t, tf};
 use crate::util::config_home;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
@@ -130,8 +131,8 @@ fn write(path: &Path, text: &str) -> std::io::Result<()> {
 
 fn io_err(e: std::io::Error) -> String {
     match e.kind() {
-        std::io::ErrorKind::PermissionDenied => "permesso negato".into(),
-        std::io::ErrorKind::NotFound => "file non trovato".into(),
+        std::io::ErrorKind::PermissionDenied => t("startup.permissionDenied"),
+        std::io::ErrorKind::NotFound => t("startup.fileNotFound"),
         _ => e.to_string(),
     }
 }
@@ -139,7 +140,7 @@ fn io_err(e: std::io::Error) -> String {
 pub fn set_enabled(id: &str, enabled: bool) -> Result<(), String> {
     let id = if id.ends_with(".desktop") { id.to_string() } else { format!("{id}.desktop") };
     if id.contains(['/', '\0']) || id.starts_with('.') {
-        return Err("Voce di avvio non valida".into());
+        return Err(t("startup.invalid"));
     }
     let ud = user_dir();
     let user = ud.join(&id);
@@ -150,12 +151,12 @@ pub fn set_enabled(id: &str, enabled: bool) -> Result<(), String> {
         (Some(kv), Some(sys)) if !kv.contains_key("Exec") || is_true(kv, MARK) == Some(true) => sys.clone(),
         (Some(_), _) => user.clone(),
         (None, Some(sys)) => sys.clone(),
-        (None, None) => return Err(format!("La voce di avvio «{id}» non esiste più")),
+        (None, None) => return Err(tf("startup.gone", &[("id", id)])),
     };
     let from_system = src != user;
     let kv = parse_desktop(&src).unwrap_or_default();
     let name = kv.get("Name").cloned().unwrap_or_else(|| id.clone());
-    let fail = |e: std::io::Error| format!("Impossibile modificare «{name}»: {}", io_err(e));
+    let fail = |e: std::io::Error| tf("startup.writeFailed", &[("name", name.clone()), ("error", io_err(e))]);
     let active = is_true(&kv, "Hidden") != Some(true) && is_true(&kv, "X-GNOME-Autostart-enabled") != Some(false);
     if from_system && enabled && active {
         // the system entry is already active: just remove the user copy

@@ -5,6 +5,7 @@
   import { settings } from "./lib/settings.svelte";
   import { ui } from "./lib/ui.svelte";
   import { enterOn } from "./lib/motion.svelte";
+  import { applyLanguage, i18n, t } from "./lib/i18n.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TopBar from "./components/TopBar.svelte";
   import Processes from "./pages/Processes.svelte";
@@ -21,16 +22,17 @@
   import Toasts from "./components/Toasts.svelte";
   import SecureScreen from "./pages/SecureScreen.svelte";
 
+  // page title keys in the dictionary (also the list of valid pages, in Ctrl+1…9 order)
   const TITLES: Record<Page, string> = {
-    processes: "Processi",
-    performance: "Prestazioni",
-    history: "Cronologia app",
-    startup: "App di avvio",
-    network: "Rete",
-    users: "Utenti",
-    details: "Dettagli",
-    services: "Servizi",
-    settings: "Impostazioni",
+    processes: "nav.processes",
+    performance: "nav.performance",
+    history: "nav.history",
+    startup: "nav.startup",
+    network: "nav.network",
+    users: "nav.users",
+    details: "nav.details",
+    services: "nav.services",
+    settings: "nav.settings",
   };
   const ORDER = Object.keys(TITLES) as Page[];
   const view = (window as unknown as { __VIEW__?: string }).__VIEW__ ?? new URLSearchParams(location.search).get("view");
@@ -41,6 +43,8 @@
     settings.init().then(() => {
       const t = q.get("theme");
       if (t === "paper" || t === "glass" || t === "graphite") settings.v.theme = t;
+      const l = q.get("lang");
+      if (l === "it" || l === "en") applyLanguage(l);
     });
     trackMaximized();
     if (q.get("page") && q.get("page")! in TITLES) app.page = q.get("page") as Page;
@@ -58,6 +62,13 @@
 
   $effect(() => {
     document.documentElement.dataset.theme = view === "secure" ? "glass" : settings.v.theme;
+  });
+
+  // window title in the interface language
+  $effect(() => {
+    i18n.lang;
+    if (!isTauri) document.title = t("app.name");
+    if (isTauri && view !== "secure") import("@tauri-apps/api/window").then(({ getCurrentWindow }) => getCurrentWindow().setTitle(t("app.name")).catch(() => {}));
   });
 
   const kept = $state({ processes: false, performance: false });
@@ -100,7 +111,7 @@
   <div class="shell">
     <Sidebar />
     <main>
-      <TopBar title={TITLES[app.page]} searchable={!SEARCHLESS.includes(app.page)} />
+      <TopBar title={t(TITLES[app.page])} searchable={!SEARCHLESS.includes(app.page)} />
       <div class="content">
         {#key app.page}
         {#if !(app.snap && (app.page === "processes" || app.page === "performance"))}
@@ -114,7 +125,7 @@
         {:else if app.page === "services"}
           <Services />
         {:else if !app.snap}
-          <p class="wait">Raccolgo i primi dati…</p>
+          <p class="wait">{t("common.collecting")}</p>
         {:else if app.page === "processes" || app.page === "performance"}
           <!-- the two most used pages stay in memory: going back to them is instant -->
         {:else if app.page === "network"}

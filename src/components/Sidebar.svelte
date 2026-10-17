@@ -2,32 +2,34 @@
   import { app, type Page } from "../lib/state.svelte";
   import Icon from "./Icon.svelte";
   import { pill } from "../lib/pill";
+  import { t } from "../lib/i18n.svelte";
 
-  const NAV: [Page, string, string][] = [
-    ["processes", "Processi", "processes"],
-    ["performance", "Prestazioni", "performance"],
-    ["history", "Cronologia app", "history"],
-    ["startup", "App di avvio", "startup"],
-    ["network", "Rete", "network"],
-    ["users", "Utenti", "users"],
-    ["details", "Dettagli", "details"],
-    ["services", "Servizi", "services"],
+  // page and icon (the label is nav.<page> in the dictionary)
+  const NAV: [Page, string][] = [
+    ["processes", "processes"],
+    ["performance", "performance"],
+    ["history", "history"],
+    ["startup", "startup"],
+    ["network", "network"],
+    ["users", "users"],
+    ["details", "details"],
+    ["services", "services"],
   ];
   const alerts = $derived(app.snap?.insights.filter((i) => i.level === "critical").length ?? 0);
 </script>
 
-<nav class="side" aria-label="Sezioni" use:pill={{ selector: "button.active", axis: "y" }}>
+<nav class="side" aria-label={t("nav.label")} use:pill={{ selector: "button.active", axis: "y" }}>
   <div class="brand" data-tauri-drag-region>
     <img src="/favicon.svg" alt="" data-tauri-drag-region />
-    <span data-tauri-drag-region>Gestione attività</span>
+    <span data-tauri-drag-region>{t("app.name")}</span>
   </div>
   <ul>
-    {#each NAV as [key, label, icon]}
+    {#each NAV as [key, icon]}
       <li>
         <button class:active={app.page === key} aria-current={app.page === key ? "page" : undefined} onclick={() => (app.page = key)}>
           <Icon name={icon} size={16} />
-          <span>{label}</span>
-          {#if key === "processes" && alerts}<i class="dot" title="{alerts} problemi da guardare"></i>{/if}
+          <span>{t(`nav.${key}`)}</span>
+          {#if key === "processes" && alerts}<i class="dot" title={t("nav.alerts", { count: alerts })}></i>{/if}
         </button>
       </li>
     {/each}
@@ -35,7 +37,7 @@
   <div class="foot">
     <button class:active={app.page === "settings"} onclick={() => (app.page = "settings")}>
       <Icon name="settings" size={16} />
-      <span>Impostazioni</span>
+      <span>{t("nav.settings")}</span>
     </button>
   </div>
 </nav>

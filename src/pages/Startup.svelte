@@ -9,6 +9,7 @@
   import AppIcon from "../components/AppIcon.svelte";
   import Switch from "../components/Switch.svelte";
   import ContextMenu, { type MenuItem } from "../components/ContextMenu.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   // Apps that start at login (XDG autostart folders), can be enabled and disabled as in KDE.
   let items = $state<StartupItem[]>([]);
@@ -36,7 +37,7 @@
     try {
       await invoke("startup_set", { id: it.id, enabled: on }, () => null);
       if (!("__TAURI_INTERNALS__" in window)) it.enabled = on;
-      ui.toast(on ? `${it.name} partirà all'accesso` : `${it.name} non partirà più all'accesso`);
+      ui.toast(t(on ? "toasts.startupOn" : "toasts.startupOff", { name: it.name }));
       await load();
     } catch (e) {
       ui.toast(String(e), "crit");
@@ -57,46 +58,46 @@
     {#if it.comment}<span class="faint t sub">{it.comment}</span>{/if}
   </span>
 {/snippet}
-{#snippet source(it: StartupItem)}<span class="soft">{it.source === "user" ? "Aggiunta da te" : "Di sistema"}</span>{/snippet}
+{#snippet source(it: StartupItem)}<span class="soft">{t(it.source === "user" ? "startup.sourceUser" : "startup.sourceSystem")}</span>{/snippet}
 {#snippet exec(it: StartupItem)}<span class="faint t" title={it.exec}>{it.exec}</span>{/snippet}
 {#snippet onoff(it: StartupItem)}
-  <Switch label="Avvia {it.name} all'accesso" checked={it.enabled} disabled={busy === it.id} onchange={(v) => toggle(it, v)} />
-  <span class="soft st">{it.enabled ? "Attiva" : "Disattivata"}</span>
+  <Switch label={t("startup.switch", { name: it.name })} checked={it.enabled} disabled={busy === it.id} onchange={(v) => toggle(it, v)} />
+  <span class="soft st">{t(it.enabled ? "startup.enabled" : "startup.disabled")}</span>
 {/snippet}
 
 <div class="pg">
   <div class="pg-bar">
-    <span class="note">{on} app partono all'accesso{items.length - on ? `, ${items.length - on} disattivate` : ""}</span>
+    <span class="note">{t("startup.note", { count: on })}{items.length - on ? `, ${t("startup.noteDisabled", { count: items.length - on })}` : ""}</span>
     <div class="pg-actions">
-      <button class="btn" disabled={!sel} onclick={() => sel && toggle(sel, !sel.enabled)}>{sel?.enabled === false ? "Attiva" : "Disattiva"}</button>
+      <button class="btn" disabled={!sel} onclick={() => sel && toggle(sel, !sel.enabled)}>{t(sel?.enabled === false ? "startup.enable" : "startup.disable")}</button>
     </div>
   </div>
   <div class="pg-panel">
     <DataTable
-      label="App di avvio"
+      label={t("nav.startup")}
       rows={shown}
       rowKey={(i) => i.id}
       bind:selected
       bind:sortKey
       bind:sortDir
-      empty={loaded ? "Nessuna app parte all'accesso" : "Carico l'elenco…"}
+      empty={loaded ? t("startup.empty") : t("startup.loading")}
       rowHeight={48}
       onmenu={(e, it) =>
         (menu = {
           x: e.clientX,
           y: e.clientY,
           items: [
-            { label: it.enabled ? "Disattiva" : "Attiva", run: () => toggle(it, !it.enabled) },
+            { label: t(it.enabled ? "startup.disable" : "startup.enable"), run: () => toggle(it, !it.enabled) },
             { sep: true },
-            { label: "Apri il file di avvio", icon: "folder", run: () => act("run", { cmd: `xdg-open '${it.path.replace(/'/g, "'\\''")}'` }) },
-            { label: "Copia il comando", icon: "copy", run: () => { navigator.clipboard?.writeText(it.exec); ui.toast("Comando copiato"); } },
+            { label: t("startup.openFile"), icon: "folder", run: () => act("run", { cmd: `xdg-open '${it.path.replace(/'/g, "'\\''")}'` }) },
+            { label: t("startup.copyCommand"), icon: "copy", run: () => { navigator.clipboard?.writeText(it.exec); ui.toast(t("toasts.commandCopied")); } },
           ],
         })}
       cols={[
-        { key: "name", label: "Nome", width: "minmax(260px, 1.4fr)", sort: (i) => i.name.toLowerCase(), cell: name },
-        { key: "source", label: "Origine", width: "140px", sort: (i) => i.source, cell: source },
-        { key: "exec", label: "Comando", width: "minmax(180px, 1fr)", sort: (i) => i.exec, cell: exec },
-        { key: "state", label: "All'accesso", width: "150px", sort: (i) => (i.enabled ? 1 : 0), cell: onoff },
+        { key: "name", label: t("common.name"), width: "minmax(260px, 1.4fr)", sort: (i) => i.name.toLowerCase(), cell: name },
+        { key: "source", label: t("startup.source"), width: "140px", sort: (i) => i.source, cell: source },
+        { key: "exec", label: t("startup.command"), width: "minmax(180px, 1fr)", sort: (i) => i.exec, cell: exec },
+        { key: "state", label: t("startup.atLogin"), width: "150px", sort: (i) => (i.enabled ? 1 : 0), cell: onoff },
       ] satisfies Col<StartupItem>[]}
     />
   </div>

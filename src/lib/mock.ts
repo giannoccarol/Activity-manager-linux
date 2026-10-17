@@ -1,12 +1,15 @@
 // Mock data for developing the UI in the browser (modeled on a real system).
 import type { Group, Insight, Proc, Section, Snapshot } from "./types";
-import { rateStr, sizeStr, pct0 } from "./format";
+import { num, rateStr, sizeStr, pct0 } from "./format";
+import { t } from "./i18n.svelte";
 
 const GiB = 1024 ** 3;
 const MiB = 1024 ** 2;
 
 interface Def {
   label: string;
+  /** dictionary key for a translated label (label stays the stable id) */
+  tkey?: string;
   icon?: string;
   section: Section;
   n: number;
@@ -25,14 +28,14 @@ const DEFS: Def[] = [
   { label: "Teams for Linux", icon: "/mock-icons/teams.svg", section: "app", n: 11, cpu: 0.2, mem: 488 * MiB, names: ["teams-for-linux"] },
   { label: "GitTree", icon: "/mock-icons/gittree.png", section: "app", n: 7, cpu: 0.1, mem: 105 * MiB, names: ["gittree"] },
   { label: "Dolphin", icon: "/mock-icons/dolphin.svg", section: "app", n: 1, cpu: 0.0, mem: 92 * MiB, names: ["dolphin"] },
-  { label: "Gestione attività", icon: "/mock-icons/app.svg", section: "app", n: 1, cpu: 1.2, mem: 64 * MiB, names: ["gestione-attivita"] },
+  { label: "Gestione attività", tkey: "app.name", icon: "/mock-icons/app.svg", section: "app", n: 1, cpu: 1.2, mem: 64 * MiB, names: ["gestione-attivita"] },
   { label: "postgres-dev", section: "ctr", n: 6, cpu: 38, mem: 7.4 * GiB, disk: 865 * MiB, image: "postgres:16", names: ["postgres", "postgres: walwriter", "postgres: autovacuum"] },
   { label: "KDE Plasma Workspace", section: "bg", n: 1, cpu: 0.4, mem: 266 * MiB, gpu: 0.3, names: ["plasmashell"] },
   { label: "KDE Wayland Compositor", section: "bg", n: 3, cpu: 1.5, mem: 64 * MiB, gpu: 3.9, names: ["kwin_wayland", "Xwayland", "kwin_wayland_wrapper"] },
   { label: "PipeWire Multimedia Service", section: "bg", n: 3, cpu: 0.3, mem: 22 * MiB, names: ["pipewire", "wireplumber", "pipewire-pulse"] },
   { label: "D-Bus User Message Bus", section: "bg", n: 2, cpu: 0.0, mem: 2.7 * MiB, names: ["dbus-broker"] },
   { label: "KDE Daemon 6", section: "bg", n: 2, cpu: 0.0, mem: 11 * MiB, names: ["kded6"] },
-  { label: "Applet di Remmina", section: "bg", n: 1, cpu: 0.0, mem: 6.1 * MiB, names: ["remmina"] },
+  { label: "Applet di Remmina", tkey: "mock.apps.remminaApplet", section: "bg", n: 1, cpu: 0.0, mem: 6.1 * MiB, names: ["remmina"] },
   { label: "KDE Connect", section: "bg", n: 1, cpu: 0.0, mem: 18 * MiB, names: ["kdeconnectd"] },
   { label: "Baloo", section: "bg", n: 1, cpu: 0.0, mem: 31 * MiB, names: ["baloo_file"] },
   { label: "Docker Application Container Engine", section: "sys", n: 2, cpu: 0.4, mem: 96 * MiB, names: ["dockerd", "docker-proxy"] },
@@ -84,7 +87,7 @@ function makeGroup(d: Def, i: number): Group {
   const disk = d.disk ? walk(`${d.label}:disk`, d.disk, 0.15) : d.section === "sys" ? 0 : sum((p) => p.disk ?? 0);
   return {
     key: `${d.section}:${d.label}`,
-    label: d.label,
+    label: d.tkey ? t(d.tkey) : d.label,
     icon: d.icon ?? null,
     section: d.section,
     unit: d.section === "ctr" ? "docker-60be07404a36.scope" : `${d.label}.service`,
@@ -118,16 +121,16 @@ export function mockSnapshot(offset?: number): Snapshot {
     {
       res: "disk",
       level: "critical",
-      title: `Disco al ${pct0(active)}%`,
-      sentence: `${ctr.label} sta scrivendo ${rateStr(ctr.disk ?? 0)}: è il ${pct0(((ctr.disk ?? 0) / (read + write)) * 100)}% di tutto l'I/O del disco, e le altre app ne risentono.`,
+      title: t("mock.insights.diskTitle", { pct: pct0(active) }),
+      sentence: t("mock.insights.diskSentence", { name: ctr.label, rate: rateStr(ctr.disk ?? 0), pct: pct0(((ctr.disk ?? 0) / (read + write)) * 100) }),
       culprit: { key: ctr.key, label: ctr.label, kind: "container", container: true },
-      others: ["Google Chrome 0,7 MB/s", "Journal Service 0,2 MB/s"],
+      others: [`Google Chrome ${num(0.7, 1)} MB/s`, `Journal Service ${num(0.2, 1)} MB/s`],
     },
     {
       res: "temp",
       level: "critical",
-      title: `CPU a ${pct0(temp)} °C`,
-      sentence: `Il calore viene soprattutto da ${ctr.label}, che usa il ${pct0(ctr.cpu)}% della CPU. Metterlo in pausa la raffredda in pochi secondi.`,
+      title: t("mock.insights.tempTitle", { temp: pct0(temp) }),
+      sentence: t("mock.insights.tempSentence", { name: ctr.label, pct: pct0(ctr.cpu) }),
       culprit: { key: ctr.key, label: ctr.label, kind: "container", container: true },
       others: [`Google Chrome ${pct0(groups[1].cpu)}%`, `Claude ${pct0(groups[0].cpu)}%`],
     },

@@ -1,17 +1,18 @@
-//! Italian-style numbers for the diagnosis sentences.
+//! Numbers for the diagnosis sentences, in the interface language (Italian: 1.234,5; English: 1,234.5).
 pub fn num(v: f64, dec: usize) -> String {
+    let (thousands, decimal) = if crate::i18n::lang() == "it" { ('.', ',') } else { (',', '.') };
     let s = format!("{:.*}", dec, v.abs());
     let (int, frac) = s.split_once('.').map(|(a, b)| (a.to_string(), Some(b.to_string()))).unwrap_or((s.clone(), None));
     let mut grouped = String::new();
     for (i, c) in int.chars().enumerate() {
         if i > 0 && (int.len() - i) % 3 == 0 {
-            grouped.push('.');
+            grouped.push(thousands);
         }
         grouped.push(c);
     }
     let sign = if v < 0.0 { "-" } else { "" };
     match frac {
-        Some(f) => format!("{sign}{grouped},{f}"),
+        Some(f) => format!("{sign}{grouped}{decimal}{f}"),
         None => format!("{sign}{grouped}"),
     }
 }

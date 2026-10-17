@@ -6,6 +6,7 @@
 
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import { t } from "../lib/i18n.svelte";
   import { fadeq, pop } from "../lib/motion.svelte";
 
   let { x, y, items, onclose }: { x: number; y: number; items: MenuItem[]; onclose: () => void } = $props();
@@ -49,7 +50,7 @@
       <button role="menuitem" class:danger={it.danger} disabled={it.disabled} onclick={() => pick(it)} style:--i={i}>
         <span class="ic">{#if it.checked}<Icon name="leaf" size={14} />{:else if it.icon}<Icon name={it.icon} size={14} />{/if}</span>
         <span>{it.label}</span>
-        {#if it.checked}<span class="on">attiva</span>{/if}
+        {#if it.checked}<span class="on">{t("menu.on")}</span>{/if}
       </button>
     {/if}
   {/each}

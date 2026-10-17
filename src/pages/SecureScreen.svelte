@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { i18n, t } from "../lib/i18n.svelte";
   import { onMount } from "svelte";
   import { isTauri } from "../lib/api";
   import { iconUrl } from "../lib/icons.svelte";
@@ -11,11 +12,12 @@
   let powerOpen = $state(false);
   let list: HTMLDivElement | undefined = $state();
 
+  // verb, label key, icon
   const OPTIONS: [string, string, string][] = [
-    ["lock", "Blocca", "lock"],
-    ["switch", "Cambia utente", "users"],
-    ["logout", "Esci", "logout"],
-    ["taskmgr", "Gestione attività", "performance"],
+    ["lock", "secure.lock", "lock"],
+    ["switch", "secure.switchUser", "users"],
+    ["logout", "secure.logout", "logout"],
+    ["taskmgr", "app.name", "performance"],
   ];
 
   async function session(verb: string) {
@@ -34,9 +36,9 @@
     return () => clearInterval(t);
   });
 
-  const time = $derived(now.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }));
+  const time = $derived(now.toLocaleTimeString(i18n.tag, { hour: "2-digit", minute: "2-digit" }));
   const date = $derived.by(() => {
-    const d = now.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+    const d = now.toLocaleDateString(i18n.tag, { weekday: "long", day: "numeric", month: "long" });
     return d.charAt(0).toUpperCase() + d.slice(1);
   });
   const initials = $derived(
@@ -81,29 +83,29 @@
           {#if avatar}<img src={avatar} alt="" />{:else}{initials}{/if}
         </span>
         <span class="name">{info?.fullName ?? ""}</span>
-        {#if info}<span class="host">{info.user} su {info.host}</span>{/if}
+        {#if info}<span class="host">{t("secure.host", { user: info.user, host: info.host })}</span>{/if}
       </div>
       <div class="opts" bind:this={list}>
         {#each OPTIONS as [verb, label, icon], i}
           <button onclick={() => session(verb)} style:--i={i}>
             <Icon name={icon} size={18} />
-            <span>{label}</span>
+            <span>{t(label)}</span>
           </button>
         {/each}
       </div>
-      <button class="cancel" onclick={() => session("cancel")}>Annulla</button>
+      <button class="cancel" onclick={() => session("cancel")}>{t("common.cancel")}</button>
     </main>
 
     <footer>
       <div class="power-wrap">
         {#if powerOpen}
           <div class="power-menu" role="menu">
-            <button role="menuitem" onclick={() => session("suspend")}><Icon name="pause" size={16} />Sospendi</button>
-            <button role="menuitem" onclick={() => session("reboot")}><Icon name="restart" size={16} />Riavvia…</button>
-            <button role="menuitem" onclick={() => session("shutdown")}><Icon name="power" size={16} />Arresta il sistema…</button>
+            <button role="menuitem" onclick={() => session("suspend")}><Icon name="pause" size={16} />{t("secure.suspend")}</button>
+            <button role="menuitem" onclick={() => session("reboot")}><Icon name="restart" size={16} />{t("secure.reboot")}</button>
+            <button role="menuitem" onclick={() => session("shutdown")}><Icon name="power" size={16} />{t("secure.shutdown")}</button>
           </div>
         {/if}
-        <button class="power" aria-label="Alimentazione" aria-expanded={powerOpen} onclick={() => (powerOpen = !powerOpen)}>
+        <button class="power" aria-label={t("secure.power")} aria-expanded={powerOpen} onclick={() => (powerOpen = !powerOpen)}>
           <Icon name="power" size={20} stroke={1.8} />
         </button>
       </div>

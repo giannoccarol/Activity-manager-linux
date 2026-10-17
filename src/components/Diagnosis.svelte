@@ -5,6 +5,7 @@
   import Icon from "./Icon.svelte";
   import { slide } from "svelte/transition";
   import { easeOut, rise, reduced } from "../lib/motion.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   let { onshow }: { onshow?: (key: string) => void } = $props();
 
@@ -46,41 +47,41 @@
       <p class="title">{cur.title}</p>
       <p class="sentence">{a}<strong>{b}</strong>{c}</p>
       {#if cur.others.length}
-        <p class="others">Seguono {cur.others.join(", ")}</p>
+        <p class="others">{t("diagnosis.others", { list: cur.others.join(", ") })}</p>
       {/if}
     </div>
     {/key}
     <div class="actions">
       {#if cur.culprit}
-        <button class="btn" onclick={() => onshow?.(cur.culprit!.key)}>Mostra</button>
+        <button class="btn" onclick={() => onshow?.(cur.culprit!.key)}>{t("diagnosis.show")}</button>
         {#if cur.culprit.container}
           <button class="btn" onclick={() => act("container", { verb: "pause", key: cur.culprit!.key })}>
-            <Icon name="pause" size={14} />Metti in pausa
+            <Icon name="pause" size={14} />{t("diagnosis.pause")}
           </button>
           <button class="btn" onclick={() => act("container", { verb: "stop", key: cur.culprit!.key })}>
-            <Icon name="stop" size={14} />Arresta
+            <Icon name="stop" size={14} />{t("diagnosis.stop")}
           </button>
         {:else}
           <button class="btn" onclick={() => act("efficiency", { key: cur.culprit!.key, on: true })}>
-            <Icon name="leaf" size={14} />Modalità efficienza
+            <Icon name="leaf" size={14} />{t("menu.efficiency")}
           </button>
-          <button class="btn" onclick={() => act("terminate", { key: cur.culprit!.key })}>Termina</button>
+          <button class="btn" onclick={() => act("terminate", { key: cur.culprit!.key })}>{t("diagnosis.end")}</button>
         {/if}
       {/if}
     </div>
     <div class="side">
       {#if list.length > 1}
         <span class="pager">
-          <button aria-label="Diagnosi precedente" onclick={() => (index = (index - 1 + list.length) % list.length)}>
+          <button aria-label={t("diagnosis.prev")} onclick={() => (index = (index - 1 + list.length) % list.length)}>
             <Icon name="chev-up" size={14} />
           </button>
-          <span>{Math.min(index, list.length - 1) + 1} di {list.length}</span>
-          <button aria-label="Diagnosi successiva" onclick={() => (index = (index + 1) % list.length)}>
+          <span>{t("diagnosis.pager", { index: Math.min(index, list.length - 1) + 1, total: list.length })}</span>
+          <button aria-label={t("diagnosis.next")} onclick={() => (index = (index + 1) % list.length)}>
             <Icon name="chev-down" size={14} />
           </button>
         </span>
       {/if}
-      <button class="close" aria-label="Nascondi per 15 minuti" title="Nascondi per 15 minuti" onclick={hide}>
+      <button class="close" aria-label={t("diagnosis.hide")} title={t("diagnosis.hide")} onclick={hide}>
         <Icon name="x" size={14} />
       </button>
     </div>

@@ -1,5 +1,6 @@
 //! Actions on processes, groups and containers. Every signal checks the process start time
 //! so it does not hit a PID reused by another program.
+use crate::i18n::{t, tf, tn};
 use crate::model::{Section, Snapshot};
 use crate::util::{read_raw, which};
 use serde_json::Value;
@@ -22,7 +23,7 @@ fn spawn(cmd: &str, args: &[&str]) -> Result<(), String> {
         .stderr(Stdio::null())
         .spawn()
         .map(|_| ())
-        .map_err(|e| format!("Impossibile avviare {cmd}: {e}"))
+        .map_err(|e| tf("actions.spawnFailed", &[("cmd", cmd.to_string()), ("error", e.to_string())]))
 }
 
 fn sig_of(name: &str) -> i32 {
@@ -57,9 +58,11 @@ fn signal(targets: &[(i32, u64)], sig: &str) -> Result<String, String> {
         let mut args = vec!["kill", "-s", sig];
         args.extend(denied.iter().map(|s| s.as_str()));
         spawn("pkexec", &args)?;
-        return Ok(format!("Richiesta l'autorizzazione per {} processi di altri utenti", denied.len()));
+        return Ok(tn("actions.authRequested", denied.len() as i64, &[]));
     }
-    Ok(format!("{done} processi"))
+    // nothing to show: the table updates by itself ("ok" is not displayed)
+    let _ = done;
+    Ok("ok".into())
 }
 
 fn set_efficiency(targets: &[(i32, u64)], on: bool) -> Result<String, String> {
@@ -91,7 +94,7 @@ fn container_cmd(unit: &str, verb: &str) -> Result<String, String> {
     } else if let Some(r) = unit.strip_prefix("libpod-") {
         ("podman", r.trim_end_matches(".scope"))
     } else {
-        return Err("Non è un container".into());
+        return Err(t("actions.notContainer"));
     };
     match verb {
         "logs" | "shell" => {
@@ -103,7 +106,7 @@ fn container_cmd(unit: &str, verb: &str) -> Result<String, String> {
                     return spawn(term, &a).map(|_| "ok".into());
                 }
             }
-            Err("Nessun terminale trovato".into())
+            Err(t("actions.noTerminal"))
         }
         "pause" | "unpause" | "stop" | "restart" | "kill" => {
             let out = Command::new(tool).args([verb, cid]).output().map_err(|e| e.to_string())?;
@@ -113,13 +116,13 @@ fn container_cmd(unit: &str, verb: &str) -> Result<String, String> {
                 Err(String::from_utf8_lossy(&out.stderr).trim().to_string())
             }
         }
-        _ => Err(format!("Azione sconosciuta: {verb}")),
+        _ => Err(tf("actions.unknown", &[("action", verb.to_string())])),
     }
 }
 
 fn open_location(path: &str) -> Result<String, String> {
     if path.is_empty() {
-        return Err("Percorso non disponibile".into());
+        return Err(t("actions.noPath"));
     }
     let uri = format!("file://{path}");
     let ok = Command::new("gdbus")
@@ -137,7 +140,7 @@ fn open_location(path: &str) -> Result<String, String> {
 fn properties(pid: i32, group: Option<&crate::model::Group>) -> Result<String, String> {
     let base = format!("/proc/{pid}");
     let link = |n: &str| std::fs::read_link(format!("{base}/{n}")).map(|x| x.to_string_lossy().into_owned()).unwrap_or_default();
-    let stat = read_raw(format!("{base}/stat")).ok_or("Il processo non esiste più")?;
+    let stat = read_raw(format!("{base}/stat")).ok_or_else(|| t("actions.processGone"))?;
     let comm = stat[stat.find('(').map(|i| i + 1).unwrap_or(0)..stat.rfind(')').unwrap_or(0)].to_string();
     let f: Vec<&str> = stat[stat.rfind(')').unwrap_or(0) + 2..].split_whitespace().collect();
     let clk = unsafe { libc::sysconf(libc::_SC_CLK_TCK) } as f64;
@@ -174,7 +177,7 @@ fn properties(pid: i32, group: Option<&crate::model::Group>) -> Result<String, S
 }
 
 pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
-    let snap = last.lock().map_err(|_| "stato non disponibile")?.clone();
+    let snap = last.lock().map_err(|_| t("actions.stateUnavailable"))?.clone();
     let key = p.get("key").and_then(|v| v.as_str()).unwrap_or("");
     // the key of a process row is "p:<pid>:<start>"
     let pkey: Option<(i32, u64)> = key.strip_prefix("p:").and_then(|r| {
@@ -207,7 +210,7 @@ pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
         "suspend" => signal(&targets, if p.get("resume").and_then(|v| v.as_bool()).unwrap_or(false) { "CONT" } else { "STOP" }),
         "efficiency" => set_efficiency(&targets, p.get("on").and_then(|v| v.as_bool()).unwrap_or(true)),
         "container" => {
-            let g = group.ok_or("Container non trovato")?;
+            let g = group.ok_or_else(|| t("actions.containerNotFound"))?;
             container_cmd(&g.unit, p.get("verb").and_then(|v| v.as_str()).unwrap_or(""))
         }
         "open-location" => {
@@ -219,13 +222,13 @@ pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
             open_location(&exe)
         }
         "properties" => {
-            let pid = pid.or_else(|| group.as_ref().and_then(|g| g.procs.first().map(|x| x.pid))).ok_or("Processo non trovato")?;
+            let pid = pid.or_else(|| group.as_ref().and_then(|g| g.procs.first().map(|x| x.pid))).ok_or_else(|| t("actions.processNotFound"))?;
             properties(pid, group.as_ref())
         }
         "run" => {
             let cmd = p.get("cmd").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
             if cmd.is_empty() {
-                return Err("Scrivi un comando".into());
+                return Err(t("actions.noCommand"));
             }
             if p.get("admin").and_then(|v| v.as_bool()).unwrap_or(false) {
                 return spawn("pkexec", &["sh", "-c", &cmd]).map(|_| "ok".into());
@@ -237,6 +240,6 @@ pub fn handle(last: &Last, action: &str, p: &Value) -> Result<String, String> {
                 .map(|_| "ok".into())
                 .map_err(|e| e.to_string())
         }
-        _ => Err(format!("Azione sconosciuta: {action}")),
+        _ => Err(tf("actions.unknown", &[("action", action.to_string())])),
     }
 }

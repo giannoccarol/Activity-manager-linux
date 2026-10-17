@@ -7,6 +7,7 @@
   import type { Group } from "../lib/types";
   import DataTable from "../components/DataTable.svelte";
   import AppIcon from "../components/AppIcon.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   // Usage per user; below, the selected user's apps.
   type U = { name: string; procs: number; cpu: number; mem: number; disk: number; gpu: number; groups: Group[] };
@@ -47,7 +48,7 @@
   });
   const cur = $derived(users.find((u) => u.name === selected) ?? null);
   const initials = (n: string) => n.slice(0, 2).toUpperCase();
-  const label = (n: string) => (n === me ? `${n} (tu)` : n === "root" ? "root (sistema)" : n);
+  const label = (n: string) => (n === me ? t("users.you", { name: n }) : n === "root" ? t("users.root") : n);
 </script>
 
 {#snippet uname(u: U)}
@@ -72,30 +73,30 @@
 
 <div class="pg">
   <div class="pg-bar">
-    <span class="note">{users.length} utenti con processi attivi</span>
+    <span class="note">{t("users.note", { count: users.length })}</span>
   </div>
   <div class="pg-panel top">
     <DataTable
-      label="Utenti"
+      label={t("nav.users")}
       rows={users}
       rowKey={(u) => u.name}
       bind:selected
       bind:sortKey
       bind:sortDir
       cols={[
-        { key: "name", label: "Utente", width: "minmax(200px, 1fr)", sort: (u) => u.name, cell: uname },
-        { key: "procs", label: "Processi", width: "96px", align: "right", sort: (u) => u.procs, cell: procs },
+        { key: "name", label: t("common.user"), width: "minmax(200px, 1fr)", sort: (u) => u.name, cell: uname },
+        { key: "procs", label: t("common.processes"), width: "96px", align: "right", sort: (u) => u.procs, cell: procs },
         { key: "cpu", label: "CPU", width: "88px", align: "right", sort: (u) => u.cpu, cell: ucpu },
-        { key: "mem", label: "Memoria", width: "108px", align: "right", sort: (u) => u.mem, cell: umem },
-        { key: "disk", label: "Disco", width: "100px", align: "right", sort: (u) => u.disk, cell: udisk },
+        { key: "mem", label: t("common.memory"), width: "108px", align: "right", sort: (u) => u.mem, cell: umem },
+        { key: "disk", label: t("common.disk"), width: "100px", align: "right", sort: (u) => u.disk, cell: udisk },
         { key: "gpu", label: "GPU", width: "80px", align: "right", sort: (u) => u.gpu, cell: ugpu },
       ] satisfies Col<U>[]}
     />
   </div>
-  <h3>{cur ? `App e servizi di ${label(cur.name)}` : "Seleziona un utente"}</h3>
+  <h3>{cur ? t("users.appsOf", { name: label(cur.name) }) : t("users.select")}</h3>
   <div class="pg-panel">
     <DataTable
-      label="App dell'utente"
+      label={t("users.appsLabel")}
       rows={cur?.groups ?? []}
       rowKey={(g) => g.key}
       bind:selected={gsel}
@@ -105,12 +106,12 @@
         app.selected = g.key;
         app.page = "processes";
       }}
-      empty="Nessuna app per questo utente"
+      empty={t("users.empty")}
       cols={[
-        { key: "name", label: "Nome", width: "minmax(200px, 1fr)", sort: (g) => g.label.toLowerCase(), cell: gname },
+        { key: "name", label: t("common.name"), width: "minmax(200px, 1fr)", sort: (g) => g.label.toLowerCase(), cell: gname },
         { key: "cpu", label: "CPU", width: "88px", align: "right", sort: (g) => g.cpu, cell: gcpu },
-        { key: "mem", label: "Memoria", width: "108px", align: "right", sort: (g) => g.mem, cell: gmem },
-        { key: "disk", label: "Disco", width: "100px", align: "right", sort: (g) => g.disk ?? -1, cell: gdisk },
+        { key: "mem", label: t("common.memory"), width: "108px", align: "right", sort: (g) => g.mem, cell: gmem },
+        { key: "disk", label: t("common.disk"), width: "100px", align: "right", sort: (g) => g.disk ?? -1, cell: gdisk },
         { key: "gpu", label: "GPU", width: "80px", align: "right", sort: (g) => g.gpu, cell: ggpu },
       ] satisfies Col<Group>[]}
     />

@@ -1,5 +1,6 @@
 // Mock data for developing the secondary pages in the browser.
 import type { HistoryRow, NetApp, Service, StartupItem } from "./types";
+import { t } from "./i18n.svelte";
 
 const now = Date.now() / 1000;
 export const mockHistory = (): HistoryRow[] => [
@@ -18,9 +19,9 @@ export const mockNet = (): NetApp[] => [
   { key: "e", label: "Tailscale node agent", icon: null, section: "sys", recv: 640, send: 320, conns: 3, remotes: ["100.64.0.4:41641"] },
 ];
 export const mockStartup = (): StartupItem[] => [
-  { id: "org.kde.discover.notifier.desktop", name: "Notifiche di Discover", icon: null, exec: "/usr/lib/DiscoverNotifier", comment: "Aggiornamenti disponibili", source: "system", path: "/etc/xdg/autostart/org.kde.discover.notifier.desktop", enabled: true },
-  { id: "teams-for-linux.desktop", name: "Teams for Linux", icon: "/mock-icons/teams.svg", exec: "teams-for-linux --minimized", comment: "Client non ufficiale di Microsoft Teams", source: "user", path: "~/.config/autostart/teams-for-linux.desktop", enabled: true },
-  { id: "org.remmina.Remmina-applet.desktop", name: "Applet di Remmina", icon: null, exec: "remmina --icon", comment: "Connessioni desktop remoto", source: "system", path: "/etc/xdg/autostart/remmina-applet.desktop", enabled: false },
+  { id: "org.kde.discover.notifier.desktop", name: t("mock.apps.discoverNotifier"), icon: null, exec: "/usr/lib/DiscoverNotifier", comment: t("mock.startup.discoverComment"), source: "system", path: "/etc/xdg/autostart/org.kde.discover.notifier.desktop", enabled: true },
+  { id: "teams-for-linux.desktop", name: "Teams for Linux", icon: "/mock-icons/teams.svg", exec: "teams-for-linux --minimized", comment: t("mock.startup.teamsComment"), source: "user", path: "~/.config/autostart/teams-for-linux.desktop", enabled: true },
+  { id: "org.remmina.Remmina-applet.desktop", name: t("mock.apps.remminaApplet"), icon: null, exec: "remmina --icon", comment: t("mock.startup.remminaComment"), source: "system", path: "/etc/xdg/autostart/remmina-applet.desktop", enabled: false },
 ];
 export const mockServices = (): Service[] => [
   { unit: "docker.service", description: "Docker Application Container Engine", scope: "system", load: "loaded", active: "active", sub: "running", state: "enabled" },

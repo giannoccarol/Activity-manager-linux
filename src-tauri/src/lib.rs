@@ -6,6 +6,7 @@ mod collect;
 mod desktop;
 mod extra;
 mod fmt;
+mod i18n;
 mod insights;
 mod model;
 mod session;
@@ -119,7 +120,7 @@ fn open_secure_with(app: &AppHandle, token: Option<String>) {
         let is_main = i == main_idx;
         let script = format!("window.__VIEW__ = 'secure'; window.__PRIMARY__ = {is_main};");
         let built = WebviewWindowBuilder::new(app, format!("secure-{i}"), WebviewUrl::default())
-            .title("Sicurezza")
+            .title(i18n::t("window.security"))
             .decorations(false)
             .always_on_top(true)
             .skip_taskbar(true)
@@ -190,11 +191,11 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     if app.tray_by_id("main").is_some() {
         return Ok(());
     }
-    let open = MenuItem::with_id(app, "open", "Apri Gestione attività", true, None::<&str>)?;
-    let secure = MenuItem::with_id(app, "secure", "Schermata Ctrl+Alt+Canc", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Esci", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", i18n::t("tray.open"), true, None::<&str>)?;
+    let secure = MenuItem::with_id(app, "secure", i18n::t("tray.secure"), true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", i18n::t("tray.quit"), true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &secure, &PredefinedMenuItem::separator(app)?, &quit])?;
-    let mut b = TrayIconBuilder::with_id("main").tooltip("Gestione attività").menu(&menu).on_menu_event(|app, e| match e.id().as_ref() {
+    let mut b = TrayIconBuilder::with_id("main").tooltip(i18n::t("app.name")).menu(&menu).on_menu_event(|app, e| match e.id().as_ref() {
         "open" => show_main(app),
         "secure" => open_secure(app),
         "quit" => app.exit(0),
@@ -216,10 +217,13 @@ fn snoozed() -> &'static Mutex<HashMap<String, Instant>> {
 }
 
 fn notify(app: AppHandle, res: String, title: String, body: String) {
+    let name = i18n::t("app.name");
+    let show = format!("--action=open={}", i18n::t("notify.show"));
+    let snooze = format!("--action=snooze={}", i18n::t("notify.snooze"));
     std::thread::spawn(move || {
         let out = std::process::Command::new("notify-send")
-            .args(["-a", "Gestione attività", "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita"])
-            .args(["--action=open=Mostra", "--action=snooze=Ignora per 2 ore", "-w", &title, &body])
+            .args(["-a", &name, "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita"])
+            .args([&show, &snooze, "-w", &title, &body])
             .output();
         let Ok(o) = out else { return };
         match String::from_utf8_lossy(&o.stdout).trim() {
@@ -384,7 +388,7 @@ fn get_settings(state: State<AppState>) -> Settings {
 #[tauri::command]
 async fn set_settings(app: AppHandle, state: State<'_, AppState>, patch: serde_json::Value) -> Result<Settings, String> {
     let (old, new) = {
-        let mut cur = state.settings.lock().map_err(|_| "impostazioni non disponibili")?;
+        let mut cur = state.settings.lock().map_err(|_| i18n::t("settings.unavailable"))?;
         let old = cur.clone();
         let mut v = serde_json::to_value(&*cur).map_err(|e| e.to_string())?;
         if let (Some(o), Some(p)) = (v.as_object_mut(), patch.as_object()) {
@@ -398,11 +402,19 @@ async fn set_settings(app: AppHandle, state: State<'_, AppState>, patch: serde_j
     };
     state.interval_ms.store(new.interval_ms, Ordering::Relaxed);
     if old.shortcuts != new.shortcuts && !settings::apply_shortcuts(new.shortcuts) {
-        return Err("KDE non ha accettato le scorciatoie: riprova dopo aver riavviato la sessione".into());
+        return Err(i18n::t("settings.shortcutsRejected"));
     }
     if old.autostart != new.autostart {
         let exe = std::env::current_exe().unwrap_or_default();
         settings::apply_autostart(new.autostart, &exe);
+    }
+    if old.language != new.language {
+        i18n::set(&new.language);
+        // the tray menu is built with the labels of the current language
+        if app.tray_by_id("main").is_some() {
+            let _ = app.remove_tray_by_id("main");
+            build_tray(&app).map_err(|e| e.to_string())?;
+        }
     }
     if old.theme != new.theme {
         glass(&app, "main", new.theme == "glass");
@@ -415,6 +427,12 @@ async fn set_settings(app: AppHandle, state: State<'_, AppState>, patch: serde_j
         }
     }
     Ok(new)
+}
+
+/// System language ("it" or "en"), used by the interface when the language is "auto".
+#[tauri::command]
+fn system_lang() -> &'static str {
+    i18n::system_lang()
 }
 
 #[tauri::command]
@@ -446,20 +464,20 @@ async fn session(app: AppHandle, verb: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn history(state: State<'_, AppState>, days: u32) -> Result<Vec<extra::history::HistoryRow>, String> {
-    Ok(state.history.lock().map_err(|_| "cronologia non disponibile")?.query(days.max(1)))
+    Ok(state.history.lock().map_err(|_| i18n::t("history.unavailable"))?.query(days.max(1)))
 }
 
 #[tauri::command]
 async fn history_clear(state: State<'_, AppState>) -> Result<(), String> {
-    state.history.lock().map_err(|_| "cronologia non disponibile")?.clear();
+    state.history.lock().map_err(|_| i18n::t("history.unavailable"))?.clear();
     Ok(())
 }
 
 #[tauri::command]
 async fn net_apps(state: State<'_, AppState>) -> Result<Vec<extra::netapp::NetApp>, String> {
-    let snap = state.last.lock().map_err(|_| "dati non disponibili")?.clone();
+    let snap = state.last.lock().map_err(|_| i18n::t("network.dataUnavailable"))?.clone();
     let Some(snap) = snap else { return Ok(vec![]) };
-    Ok(state.netapps.lock().map_err(|_| "rete non disponibile")?.sample(&snap))
+    Ok(state.netapps.lock().map_err(|_| i18n::t("network.unavailable"))?.sample(&snap))
 }
 
 #[tauri::command]
@@ -484,11 +502,14 @@ async fn service_action(unit: String, scope: String, verb: String) -> Result<Str
 
 /// Assigns (or removes, restoring Log Out on Ctrl+Alt+Del) the KDE shortcuts. Used by the installer.
 pub fn shortcuts(on: bool) -> bool {
+    // the shortcuts are registered with names in the interface language
+    i18n::set(&Settings::load().language);
     settings::apply_shortcuts(on)
 }
 
-/// Prints a snapshot as JSON (diagnostics: `gestione-attivita --dump`).
+/// Prints a snapshot as JSON (diagnostics: `gestione-attivita --dump`), in the language of the settings.
 pub fn dump() {
+    i18n::set(&Settings::load().language);
     let mut c = collect::Collector::new();
     c.collect();
     std::thread::sleep(Duration::from_millis(1000));
@@ -502,6 +523,7 @@ pub fn run() {
     let secure = args.iter().any(|a| a == "--secure");
     let tray_only = args.iter().any(|a| a == "--tray");
     let cfg = Settings::load();
+    i18n::set(&cfg.language);
     let state = AppState {
         last: Arc::new(Mutex::new(None)),
         started: AtomicBool::new(false),
@@ -582,6 +604,7 @@ pub fn run() {
             get_settings,
             set_settings,
             session_info,
+            system_lang,
             session,
             history,
             history_clear,

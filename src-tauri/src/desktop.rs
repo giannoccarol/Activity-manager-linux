@@ -20,15 +20,20 @@ pub struct DesktopDb {
     by_wmclass: HashMap<String, Entry>,
 }
 
+/// Name[xx] variants to look for, in order, for the interface language: Italian prefers Name[it_IT] and Name[it];
+/// English uses the system's English variant if there is one (Name[en_GB]), otherwise the plain Name.
 fn langs() -> Vec<String> {
-    let raw = std::env::var("LC_MESSAGES")
-        .or_else(|_| std::env::var("LC_ALL"))
-        .or_else(|_| std::env::var("LANG"))
-        .unwrap_or_else(|_| "it_IT".into());
-    let base = raw.split(['.', '@']).next().unwrap_or("it_IT").to_string();
-    let mut v = vec![base.clone()];
-    if let Some((l, _)) = base.split_once('_') {
-        v.push(l.to_string());
+    let raw = ["LC_ALL", "LC_MESSAGES", "LANG"].iter().find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty())).unwrap_or_default();
+    let base = raw.split(['.', '@']).next().unwrap_or("").to_string();
+    let lang = crate::i18n::lang();
+    let mut v = vec![];
+    if base.split('_').next() == Some(lang) && base.contains('_') {
+        v.push(base);
+    } else if lang == "it" {
+        v.push("it_IT".into());
+    }
+    if lang == "it" {
+        v.push("it".into());
     }
     v
 }

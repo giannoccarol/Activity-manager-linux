@@ -1,5 +1,6 @@
 <script lang="ts" generics="T">
   import Icon from "./Icon.svelte";
+  import { i18n, t } from "../lib/i18n.svelte";
   import type { Col } from "../lib/table";
 
   let {
@@ -14,7 +15,7 @@
     onmenu,
     onopen,
     onkey,
-    empty = "Nessun elemento",
+    empty,
     rowHeight = 36,
   }: {
     rows: T[];
@@ -59,7 +60,7 @@
     return [...rows].sort((a, b) => {
       const va = f(a);
       const vb = f(b);
-      const r = typeof va === "string" && typeof vb === "string" ? va.localeCompare(vb, "it") : (va as number) - (vb as number);
+      const r = typeof va === "string" && typeof vb === "string" ? va.localeCompare(vb, i18n.tag) : (va as number) - (vb as number);
       return r * sortDir;
     });
   });
@@ -184,7 +185,7 @@
       {/each}
       <div style:height="{visible.after}px"></div>
     {:else}
-      <p class="empty">{empty}</p>
+      <p class="empty">{empty ?? t("common.noItems")}</p>
     {/if}
   </div>
 </div>

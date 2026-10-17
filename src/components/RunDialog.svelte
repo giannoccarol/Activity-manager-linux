@@ -2,6 +2,7 @@
   import Dialog from "./Dialog.svelte";
   import { act } from "../lib/api";
   import { ui } from "../lib/ui.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   const KEY = "ga.run-history";
   const recent: string[] = (() => {
@@ -28,26 +29,26 @@
     try {
       localStorage.setItem(KEY, JSON.stringify([c, ...recent.filter((x) => x !== c)].slice(0, 12)));
     } catch {}
-    ui.toast(`Avviato ${c.split(" ")[0]}`);
+    ui.toast(t("toasts.started", { cmd: c.split(" ")[0] }));
     close();
   }
 </script>
 
-<Dialog title="Nuova attività" onclose={close} width={480}>
+<Dialog title={t("dialogs.run.title")} onclose={close} width={480}>
   <form id="run" onsubmit={run}>
-    <p>Scrivi il nome di un programma o un comando: parte in background, separato da questa finestra.</p>
-    <input bind:value={cmd} list="run-recent" spellcheck="false" autocomplete="off" placeholder="es. dolphin, konsole, firefox --private-window" onfocus={(e) => e.currentTarget.select()} />
+    <p>{t("dialogs.run.intro")}</p>
+    <input bind:value={cmd} list="run-recent" spellcheck="false" autocomplete="off" placeholder={t("dialogs.run.placeholder")} onfocus={(e) => e.currentTarget.select()} />
     <datalist id="run-recent">
       {#each recent as r}<option value={r}></option>{/each}
     </datalist>
     <label>
       <input type="checkbox" bind:checked={admin} />
-      Esegui come amministratore
+      {t("dialogs.run.admin")}
     </label>
   </form>
   {#snippet footer()}
-    <button class="btn" onclick={close}>Annulla</button>
-    <button class="btn primary" type="submit" form="run" disabled={!cmd.trim() || busy}>Esegui</button>
+    <button class="btn" onclick={close}>{t("common.cancel")}</button>
+    <button class="btn primary" type="submit" form="run" disabled={!cmd.trim() || busy}>{t("dialogs.run.run")}</button>
   {/snippet}
 </Dialog>
 

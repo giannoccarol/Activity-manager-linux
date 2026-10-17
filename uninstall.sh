@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Removes Gestione attività and gives Ctrl+Alt+Del back to KDE's "Log Out".
+# Removes Activity Manager (Gestione attività) and gives Ctrl+Alt+Del back to KDE's "Log Out".
 # History and settings stay in ~/.local/share/gestione-attivita and ~/.config/gestione-attivita.
 set -euo pipefail
 
@@ -15,4 +15,4 @@ rm -f "$DATA/applications/gestione-attivita.desktop" "$DATA/applications/gestion
 rm -f "$CONF/autostart/gestione-attivita.desktop"
 find "$DATA/icons/hicolor" -name "gestione-attivita.*" -delete 2>/dev/null || true
 kbuildsycoca6 >/dev/null 2>&1 || true
-echo "Gestione attività removed. Ctrl+Alt+Del is back to KDE's \"Log Out\"."
+echo "Activity Manager removed. Ctrl+Alt+Del is back to KDE's \"Log Out\"."

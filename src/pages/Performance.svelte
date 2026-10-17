@@ -6,6 +6,7 @@
   import Icon from "../components/Icon.svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import { pill } from "../lib/pill";
+  import { t } from "../lib/i18n.svelte";
 
   type Item = { id: string; kind: "cpu" | "mem" | "disk" | "net" | "gpu"; name: string; sub: string; value: string; hist: string; max: number | "auto"; off?: boolean };
 
@@ -18,13 +19,13 @@
   const items = $derived.by((): Item[] => {
     const out: Item[] = [
       { id: "cpu", kind: "cpu", name: "CPU", sub: ghz(s.cpu.freq), value: `${pct0(s.cpu.total)}%`, hist: "cpu", max: 100 },
-      { id: "mem", kind: "mem", name: "Memoria", sub: `${sizeStr(s.mem.used)} di ${sizeStr(s.mem.total)}`, value: `${pct0(s.mem.pct)}%`, hist: "mem", max: 100 },
+      { id: "mem", kind: "mem", name: t("common.memory"), sub: t("common.ofTotal", { used: sizeStr(s.mem.used), total: sizeStr(s.mem.total) }), value: `${pct0(s.mem.pct)}%`, hist: "mem", max: 100 },
     ];
-    s.disks.forEach((d, i) => out.push({ id: `disk:${d.name}`, kind: "disk", name: `Disco ${i}`, sub: d.kind, value: `${pct0(d.active)}%`, hist: `disk:${d.name}`, max: 100 }));
+    s.disks.forEach((d, i) => out.push({ id: `disk:${d.name}`, kind: "disk", name: t("performance.disk", { n: i }), sub: d.kind, value: `${pct0(d.active)}%`, hist: `disk:${d.name}`, max: 100 }));
     s.nets.forEach((n) =>
-      out.push({ id: `net:${n.name}`, kind: "net", name: n.kind, sub: n.ssid ?? n.name, value: n.connected ? bitsStr(n.recv + n.send) : "Non connessa", hist: `netR:${n.name}`, max: "auto", off: !n.connected }),
+      out.push({ id: `net:${n.name}`, kind: "net", name: n.kind, sub: n.ssid ?? n.name, value: n.connected ? bitsStr(n.recv + n.send) : t("performance.notConnected"), hist: `netR:${n.name}`, max: "auto", off: !n.connected }),
     );
-    s.gpus.forEach((g) => out.push({ id: `gpu:${g.idx}`, kind: "gpu", name: `GPU ${g.idx}`, sub: g.name, value: g.suspended ? "Sospesa" : `${pct0(g.util)}%`, hist: `gpu:${g.idx}`, max: 100, off: g.suspended }));
+    s.gpus.forEach((g) => out.push({ id: `gpu:${g.idx}`, kind: "gpu", name: `GPU ${g.idx}`, sub: g.name, value: g.suspended ? t("performance.gpuSuspended") : `${pct0(g.util)}%`, hist: `gpu:${g.idx}`, max: 100, off: g.suspended }));
     return out;
   });
   const cur = $derived(items.find((i) => i.id === current) ?? items[0]);
@@ -45,7 +46,7 @@
 </script>
 
 <div class="perf">
-  <ul class="list" aria-label="Risorse" use:pill={{ selector: "button.active", axis: "y" }}>
+  <ul class="list" aria-label={t("performance.resources")} use:pill={{ selector: "button.active", axis: "y" }}>
     {#each items as it (it.id)}
       <li>
         <button class:active={it.id === cur.id} class:off={it.off} style="--c: var(--{it.kind})" onclick={() => (current = it.id)}>
@@ -65,14 +66,14 @@
     <header>
       <h2>{cur.name}</h2>
       <span class="device">
-        {#if cur.kind === "cpu"}{s.cpu.model}{:else if disk}{disk.model}{:else if gpu}{gpu.name}{:else if net}{net.name}{:else}{sizeStr(s.mem.total, 0)} di RAM{/if}
+        {#if cur.kind === "cpu"}{s.cpu.model}{:else if disk}{disk.model}{:else if gpu}{gpu.name}{:else if net}{net.name}{:else}{t("performance.ram", { size: sizeStr(s.mem.total, 0) })}{/if}
       </span>
     </header>
 
     {#if cur.kind === "cpu"}
       <div class="tabs" role="tablist" use:pill>
-        <button role="tab" aria-selected={!coreView} class:on={!coreView} onclick={() => (coreView = false)}>Complessivo</button>
-        <button role="tab" aria-selected={coreView} class:on={coreView} onclick={() => (coreView = true)}>Per processore</button>
+        <button role="tab" aria-selected={!coreView} class:on={!coreView} onclick={() => (coreView = false)}>{t("performance.overall")}</button>
+        <button role="tab" aria-selected={coreView} class:on={coreView} onclick={() => (coreView = true)}>{t("performance.logical")}</button>
       </div>
     {/if}
 
@@ -89,7 +90,7 @@
           <Trace
             samples={app.hist[cur.hist] ?? []}
             second={cur.kind === "cpu" ? app.hist.cpuKernel : net ? app.hist[`netS:${net.name}`] : undefined}
-            names={cur.kind === "cpu" ? ["Totale", "Kernel"] : net ? ["Ricezione", "Invio"] : undefined}
+            names={cur.kind === "cpu" ? [t("performance.total"), "Kernel"] : net ? [t("performance.receive"), t("performance.send")] : undefined}
             now={s.t}
             max={cur.max}
             floor={125000}
@@ -99,50 +100,50 @@
             format={cur.kind === "net" ? bitsStr : (v) => `${num(v, 1)}%`} />
         </div>
       {/if}
-      <div class="axis"><span>60 secondi</span><span>adesso</span></div>
+      <div class="axis"><span>{t("performance.axisStart")}</span><span>{t("chart.now")}</span></div>
       {#if disk}
-        <div class="scale second"><span>Trasferimento</span><span>{rateStr(scale2)}</span></div>
+        <div class="scale second"><span>{t("performance.transfer")}</span><span>{rateStr(scale2)}</span></div>
         <div class="big small">
-          <Trace samples={app.hist[`diskW:${disk.name}`] ?? []} second={app.hist[`diskR:${disk.name}`]} names={["Scrittura", "Lettura"]} now={s.t} max="auto" floor={1048576} color="var(--c)" graticule="full" format={rateStr} onscale={(v) => (scale2 = v)} />
+          <Trace samples={app.hist[`diskW:${disk.name}`] ?? []} second={app.hist[`diskR:${disk.name}`]} names={[t("performance.write"), t("performance.read")]} now={s.t} max="auto" floor={1048576} color="var(--c)" graticule="full" format={rateStr} onscale={(v) => (scale2 = v)} />
         </div>
       {/if}
     </div>
 
     <dl class="readouts">
       {#if cur.kind === "cpu"}
-        <div><dt>Utilizzo</dt><dd>{pct0(s.cpu.total)}%</dd></div>
-        <div><dt>Velocità</dt><dd>{ghz(s.cpu.freq)}</dd></div>
-        <div><dt>Temperatura</dt><dd class:hot={(s.cpu.temp ?? 0) >= 90}>{s.cpu.temp !== null ? `${pct0(s.cpu.temp)} °C` : "—"}</dd></div>
-        <div><dt>Processi</dt><dd>{num(s.counts.procs, 0)}</dd></div>
-        <div><dt>Thread</dt><dd>{num(s.counts.threads, 0)}</dd></div>
-        <div><dt>Acceso da</dt><dd>{uptime(s.uptime)}</dd></div>
+        <div><dt>{t("performance.utilization")}</dt><dd>{pct0(s.cpu.total)}%</dd></div>
+        <div><dt>{t("performance.speed")}</dt><dd>{ghz(s.cpu.freq)}</dd></div>
+        <div><dt>{t("performance.temperature")}</dt><dd class:hot={(s.cpu.temp ?? 0) >= 90}>{s.cpu.temp !== null ? `${pct0(s.cpu.temp)} °C` : "—"}</dd></div>
+        <div><dt>{t("common.processes")}</dt><dd>{num(s.counts.procs, 0)}</dd></div>
+        <div><dt>{t("common.threads")}</dt><dd>{num(s.counts.threads, 0)}</dd></div>
+        <div><dt>{t("performance.uptime")}</dt><dd>{uptime(s.uptime)}</dd></div>
       {:else if cur.kind === "mem"}
-        <div><dt>In uso</dt><dd>{sizeStr(s.mem.used)}</dd></div>
-        <div><dt>Disponibile</dt><dd>{sizeStr(s.mem.available)}</dd></div>
-        <div><dt>In cache</dt><dd>{sizeStr(s.mem.cached)}</dd></div>
+        <div><dt>{t("performance.inUse")}</dt><dd>{sizeStr(s.mem.used)}</dd></div>
+        <div><dt>{t("performance.available")}</dt><dd>{sizeStr(s.mem.available)}</dd></div>
+        <div><dt>{t("performance.cached")}</dt><dd>{sizeStr(s.mem.cached)}</dd></div>
         <div><dt>Swap</dt><dd>{sizeStr(s.mem.swapUsed)}</dd></div>
       {:else if disk}
-        <div><dt>Attività</dt><dd class:hot={disk.active >= 90}>{pct0(disk.active)}%</dd></div>
-        <div><dt>Scrittura</dt><dd>{rateStr(disk.write)}</dd></div>
-        <div><dt>Lettura</dt><dd>{rateStr(disk.read)}</dd></div>
-        <div><dt>Risposta media</dt><dd>{num(disk.resp, 0)} ms</dd></div>
-        <div><dt>Capacità</dt><dd>{sizeStr(disk.capacity, 0)}</dd></div>
+        <div><dt>{t("performance.activeTime")}</dt><dd class:hot={disk.active >= 90}>{pct0(disk.active)}%</dd></div>
+        <div><dt>{t("performance.write")}</dt><dd>{rateStr(disk.write)}</dd></div>
+        <div><dt>{t("performance.read")}</dt><dd>{rateStr(disk.read)}</dd></div>
+        <div><dt>{t("performance.avgResponse")}</dt><dd>{num(disk.resp, 0)} ms</dd></div>
+        <div><dt>{t("performance.capacity")}</dt><dd>{sizeStr(disk.capacity, 0)}</dd></div>
       {:else if net}
-        <div><dt>Ricezione</dt><dd>{bitsStr(net.recv)}</dd></div>
-        <div><dt>Invio</dt><dd>{bitsStr(net.send)}</dd></div>
-        <div><dt>Collegamento</dt><dd>{net.link ? bitsStr(net.link) : "—"}</dd></div>
-        <div><dt>Rete</dt><dd>{net.ssid ?? net.name}</dd></div>
+        <div><dt>{t("performance.receive")}</dt><dd>{bitsStr(net.recv)}</dd></div>
+        <div><dt>{t("performance.send")}</dt><dd>{bitsStr(net.send)}</dd></div>
+        <div><dt>{t("performance.link")}</dt><dd>{net.link ? bitsStr(net.link) : "—"}</dd></div>
+        <div><dt>{t("common.network")}</dt><dd>{net.ssid ?? net.name}</dd></div>
       {:else if gpu}
-        <div><dt>Utilizzo</dt><dd>{gpu.suspended ? "—" : `${pct0(gpu.util)}%`}</dd></div>
-        <div><dt>Memoria</dt><dd>{sizeStr(gpu.memUsed)}{gpu.memTotal ? ` di ${sizeStr(gpu.memTotal, 0)}` : ""}</dd></div>
-        <div><dt>Stato</dt><dd>{gpu.suspended ? "Sospesa per risparmiare energia" : "Attiva"}</dd></div>
+        <div><dt>{t("performance.utilization")}</dt><dd>{gpu.suspended ? "—" : `${pct0(gpu.util)}%`}</dd></div>
+        <div><dt>{t("common.memory")}</dt><dd>{gpu.memTotal ? t("common.ofTotal", { used: sizeStr(gpu.memUsed), total: sizeStr(gpu.memTotal, 0) }) : sizeStr(gpu.memUsed)}</dd></div>
+        <div><dt>{t("common.status")}</dt><dd>{gpu.suspended ? t("performance.gpuSleeping") : t("performance.gpuActive")}</dd></div>
       {/if}
     </dl>
 
     {#if cur.kind !== "net" && !(gpu && gpu.suspended)}
       {@const rows = top(cur.kind === "disk" ? "disk" : cur.kind === "mem" ? "mem" : cur.kind === "gpu" ? "gpu" : "cpu")}
       <section class="who">
-        <h3>Chi sta usando {cur.kind === "cpu" ? "la CPU" : cur.kind === "mem" ? "la memoria" : cur.kind === "disk" ? "il disco" : "la GPU"}</h3>
+        <h3>{t(`performance.who.${cur.kind}`)}</h3>
         {#each rows as [g, txt, f] (g.key)}
           <div class="whorow">
             <span class="wi"><AppIcon src={g.icon} section={g.section} size={18} /></span>
