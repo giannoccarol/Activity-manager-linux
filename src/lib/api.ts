@@ -1,6 +1,7 @@
 // Bridge to the Rust (Tauri) backend. In the browser it uses mock data to develop the UI.
 import type { Snapshot } from "./types";
 import { ui, type Props } from "./ui.svelte";
+import { t } from "./i18n.svelte";
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -46,8 +47,8 @@ export async function act(action: string, payload: Record<string, unknown> = {})
     const r = await call(action, payload);
     if (action === "properties") {
       if (r) ui.dialog = { kind: "props", data: JSON.parse(r) as Props };
-      else ui.toast("Le proprietà sono disponibili solo nell'app");
-    } else if (r?.startsWith("Richiesta")) ui.toast(r);
+      else ui.toast(t("toasts.propsOnlyInApp"));
+    } else if (r && r !== "ok") ui.toast(r); // e.g. authorization requested for other users' processes
     return r;
   } catch (e) {
     ui.toast(String(e), "crit");
@@ -59,7 +60,7 @@ export async function act(action: string, payload: Record<string, unknown> = {})
 export async function invoke<T>(cmd: string, args: Record<string, unknown> = {}, mock?: () => T): Promise<T> {
   if (!isTauri) {
     if (mock) return mock();
-    throw new Error("Disponibile solo nell'app");
+    throw new Error(t("toasts.onlyInApp"));
   }
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<T>(cmd, args);

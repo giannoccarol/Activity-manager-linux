@@ -1,0 +1,587 @@
+{
+  "app": {
+    "name": "Activity Manager"
+  },
+  "chart": {
+    "label": "Chart of the last {seconds} seconds",
+    "now": "now",
+    "secondsAgo": "{n} s ago"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "collecting": "Collecting the first data…",
+    "commandLine": "Command line",
+    "disk": "Disk",
+    "memory": "Memory",
+    "name": "Name",
+    "network": "Network",
+    "noItems": "No items",
+    "notReadable": "Not readable without privileges",
+    "ofTotal": "{used} of {total}",
+    "priority": "Priority",
+    "processes": "Processes",
+    "status": "Status",
+    "threads": "Threads",
+    "user": "User"
+  },
+  "details": {
+    "belongsTo": "Belongs to",
+    "empty": "No processes",
+    "label": "Process details",
+    "noMatch": "No process matches “{query}”",
+    "note": {
+      "one": "{n} process, {threads} threads",
+      "other": "{n} processes, {threads} threads"
+    },
+    "noteFound": {
+      "one": "{n} process found, {threads} threads",
+      "other": "{n} processes found, {threads} threads"
+    }
+  },
+  "diagnosis": {
+    "end": "End task",
+    "hide": "Hide for 15 minutes",
+    "next": "Next diagnosis",
+    "others": "Followed by {list}",
+    "pager": "{index} of {total}",
+    "pause": "Pause",
+    "prev": "Previous diagnosis",
+    "show": "Show",
+    "stop": "Stop"
+  },
+  "dialogs": {
+    "props": {
+      "childOf": "child of {pid}",
+      "copy": "Copy",
+      "cwd": "Working directory",
+      "filesNotAccessible": "open files not accessible",
+      "inGroup": "{name}, in {group}",
+      "notAccessible": "Not accessible",
+      "openFiles": {
+        "one": "{count} open file",
+        "other": "{count} open files"
+      },
+      "openLocation": "Open location",
+      "physicalMemory": "Physical memory",
+      "program": "Program",
+      "started": "Started",
+      "startedAgo": "{when}, {since} ago",
+      "swap": "plus {size} in swap",
+      "threads": {
+        "one": "{n} thread",
+        "other": "{n} threads"
+      },
+      "threadsFiles": "Threads and open files",
+      "unit": "systemd unit"
+    },
+    "run": {
+      "admin": "Run as administrator",
+      "intro": "Type the name of a program or a command: it starts in the background, separate from this window.",
+      "placeholder": "e.g. dolphin, konsole, firefox --private-window",
+      "run": "Run",
+      "title": "Create new task"
+    }
+  },
+  "format": {
+    "daysHours": "{d} d {h} h",
+    "hours": "{h} h",
+    "hoursMinutes": "{h} h {m} min",
+    "justNow": "just now",
+    "lessThanSecond": "less than 1 s",
+    "minutes": "{m} min",
+    "minutesAgo": "{m} min ago",
+    "seconds": "{s} s",
+    "todayAt": "today at {time}",
+    "yesterdayAt": "yesterday at {time}"
+  },
+  "history": {
+    "clear": "Delete usage history",
+    "confirmText": "This deletes the recorded usage of every app, for all days. It can't be undone.",
+    "confirmTitle": "Delete usage history?",
+    "cpuTime": "CPU time",
+    "days": {
+      "one": "{count} day",
+      "other": "{count} days"
+    },
+    "diskIo": "Disk read and written",
+    "empty": "No data for this period yet: the history fills up while the app is open or in the system tray.",
+    "gpuTime": "GPU time",
+    "lastActive": "Last active",
+    "loading": "Loading history…",
+    "onlyApps": "Apps and containers only",
+    "peakMemory": "Peak memory",
+    "period": "Period",
+    "runs": {
+      "one": "{count} run",
+      "other": "{count} runs"
+    },
+    "today": "Today"
+  },
+  "menu": {
+    "collapse": "Collapse",
+    "copyCommandLine": "Copy command line",
+    "efficiency": "Efficiency mode",
+    "endTask": "End task",
+    "expand": "Expand",
+    "forceEnd": "Force end task",
+    "on": "on",
+    "openLocation": "Open file location",
+    "openShell": "Open a shell",
+    "pause": "Pause",
+    "properties": "Properties",
+    "restart": "Restart",
+    "resume": "Resume",
+    "showLogs": "Show logs",
+    "stopContainer": "Stop container",
+    "suspend": "Suspend"
+  },
+  "mock": {
+    "apps": {
+      "discoverNotifier": "Discover Notifier",
+      "remminaApplet": "Remmina Applet"
+    },
+    "insights": {
+      "diskSentence": "{name} is writing {rate}: that's {pct}% of all disk I/O, and other apps are slowing down.",
+      "diskTitle": "Disk at {pct}%",
+      "tempSentence": "Most of the heat comes from {name}, which uses {pct}% of the CPU. Pausing it cools the CPU down in a few seconds.",
+      "tempTitle": "CPU at {temp} °C"
+    },
+    "startup": {
+      "discoverComment": "Updates available",
+      "remminaComment": "Remote desktop connections",
+      "teamsComment": "Unofficial Microsoft Teams client"
+    }
+  },
+  "nav": {
+    "alerts": {
+      "one": "{count} issue to look at",
+      "other": "{count} issues to look at"
+    },
+    "details": "Details",
+    "history": "App history",
+    "label": "Sections",
+    "network": "Network",
+    "performance": "Performance",
+    "processes": "Processes",
+    "services": "Services",
+    "settings": "Settings",
+    "startup": "Startup apps",
+    "users": "Users"
+  },
+  "network": {
+    "app": "App",
+    "connections": "Connections",
+    "empty": "No app is using the network right now",
+    "hint": "Some traffic can't be attributed to an app: UDP-based protocols (such as QUIC, used by YouTube and Google) don't expose bytes per connection.",
+    "label": "Network by app",
+    "link": "{speed} link",
+    "loading": "Reading connections…",
+    "none": "No connected networks.",
+    "receive": "Receive",
+    "remote": "Remote addresses",
+    "send": "Send"
+  },
+  "performance": {
+    "activeTime": "Active time",
+    "available": "Available",
+    "avgResponse": "Average response time",
+    "axisStart": "60 seconds",
+    "cached": "Cached",
+    "capacity": "Capacity",
+    "disk": "Disk {n}",
+    "gpuActive": "Active",
+    "gpuSleeping": "Suspended to save power",
+    "gpuSuspended": "Suspended",
+    "inUse": "In use",
+    "link": "Link speed",
+    "logical": "Logical processors",
+    "notConnected": "Not connected",
+    "overall": "Overall",
+    "ram": "{size} RAM",
+    "read": "Read speed",
+    "receive": "Receive",
+    "resources": "Resources",
+    "send": "Send",
+    "speed": "Speed",
+    "temperature": "Temperature",
+    "total": "Total",
+    "transfer": "Transfer rate",
+    "uptime": "Up time",
+    "utilization": "Utilization",
+    "who": {
+      "cpu": "What's using the CPU",
+      "disk": "What's using the disk",
+      "gpu": "What's using the GPU",
+      "mem": "What's using memory"
+    },
+    "write": "Write speed"
+  },
+  "priority": {
+    "efficiency": "Efficiency",
+    "high": "High",
+    "low": "Low",
+    "lowest": "Lowest (efficiency)",
+    "normal": "Normal"
+  },
+  "processes": {
+    "efficiency": "Efficiency mode",
+    "empty": "No process matches “{query}”. Try the app name, the PID or part of the command line.",
+    "end": "End task",
+    "endNamed": "End {name}",
+    "filterLabel": "Filter by type",
+    "filters": {
+      "all": "All",
+      "app": "Apps",
+      "bg": "Background",
+      "ctr": "Containers",
+      "sys": "System"
+    },
+    "gpuEngine": "GPU engine",
+    "moreActions": "More actions",
+    "newTask": "Run new task",
+    "sections": {
+      "app": "Apps",
+      "bg": "Background processes",
+      "ctr": "Containers",
+      "sys": "System processes"
+    },
+    "status": {
+      "efficiency": "Efficiency mode",
+      "paused": "Paused",
+      "running": "Running",
+      "stopped": "Suspended"
+    }
+  },
+  "secure": {
+    "host": "{user} on {host}",
+    "lock": "Lock",
+    "logout": "Sign out",
+    "power": "Power",
+    "reboot": "Restart…",
+    "shutdown": "Shut down…",
+    "suspend": "Sleep",
+    "switchUser": "Switch user"
+  },
+  "services": {
+    "boot": {
+      "alias": "Alias",
+      "automatic": "Automatic",
+      "generated": "Generated",
+      "linked": "Linked",
+      "manual": "Manual",
+      "masked": "Disabled",
+      "onDemand": "On demand",
+      "transient": "Transient"
+    },
+    "description": "Description",
+    "empty": "No services in this list",
+    "filterLabel": "Filter services",
+    "filters": {
+      "all": "All",
+      "failed": "Failed",
+      "running": "Running",
+      "stopped": "Stopped"
+    },
+    "groups": {
+      "system": "System services",
+      "user": "User services"
+    },
+    "loading": "Reading services…",
+    "menu": {
+      "autostart": "Start automatically",
+      "goToProcesses": "Go to processes",
+      "mask": "Disable completely",
+      "showLog": "Show log",
+      "unmask": "Re-enable service"
+    },
+    "restart": "Restart",
+    "start": "Start",
+    "startup": "Startup type",
+    "state": {
+      "failed": "Failed",
+      "running": "Running",
+      "starting": "Starting",
+      "stopped": "Stopped"
+    },
+    "stop": "Stop"
+  },
+  "settings": {
+    "about": "Activity Manager 2.0, written in Rust with Tauri. It reads data straight from the kernel, with no extra services.",
+    "alerts": {
+      "desc": "A notification when disk, memory, CPU or temperature max out, with the reason and the app responsible.",
+      "label": "Alert me when something hits its limit",
+      "switch": "Alerts"
+    },
+    "appearance": {
+      "theme": "Theme",
+      "title": "Appearance"
+    },
+    "autostart": {
+      "desc": "Starts hidden in the system tray, so {keys} responds right away.",
+      "label": "Start at sign-in"
+    },
+    "keyboard": {
+      "desc": "{secure} opens the security screen, {taskmgr} opens Activity Manager.",
+      "label": "Windows-style shortcuts",
+      "title": "Keyboard"
+    },
+    "keys": {
+      "del": "Del",
+      "shift": "Shift"
+    },
+    "language": {
+      "auto": "Automatic",
+      "desc": "Automatic follows the system language.",
+      "en": "English",
+      "it": "Italiano",
+      "label": "Interface language",
+      "title": "Language"
+    },
+    "refresh": {
+      "desc": "How often processes and charts are refreshed. Slower uses less battery.",
+      "label": "Update speed",
+      "title": "Refresh"
+    },
+    "system": {
+      "title": "Alerts and system tray"
+    },
+    "themes": {
+      "glass": {
+        "desc": "Transparent: the blurred desktop shows through",
+        "name": "Glass"
+      },
+      "graphite": {
+        "desc": "Dark and matte",
+        "name": "Graphite"
+      },
+      "paper": {
+        "desc": "Light, for bright rooms",
+        "name": "Paper"
+      }
+    },
+    "tray": {
+      "desc": "When you close the window, the app keeps watching the system and reopens instantly.",
+      "label": "Keep running in the system tray"
+    }
+  },
+  "startup": {
+    "atLogin": "At sign-in",
+    "command": "Command",
+    "copyCommand": "Copy command",
+    "disable": "Disable",
+    "disabled": "Disabled",
+    "empty": "No apps start at sign-in",
+    "enable": "Enable",
+    "enabled": "Enabled",
+    "loading": "Loading the list…",
+    "note": {
+      "one": "{count} app starts at sign-in",
+      "other": "{count} apps start at sign-in"
+    },
+    "noteDisabled": {
+      "one": "{count} disabled",
+      "other": "{count} disabled"
+    },
+    "openFile": "Open startup file",
+    "source": "Source",
+    "sourceSystem": "System",
+    "sourceUser": "Added by you",
+    "switch": "Start {name} at sign-in"
+  },
+  "strip": {
+    "label": "Resource usage",
+    "reading": "reading {rate}",
+    "writing": "writing {rate}"
+  },
+  "toasts": {
+    "commandCopied": "Command copied",
+    "commandLineCopied": "Command line copied",
+    "copied": "Copied to clipboard",
+    "historyCleared": "Usage history deleted",
+    "onlyInApp": "Only available in the app",
+    "propsOnlyInApp": "Properties are only available in the app",
+    "started": "Started {cmd}",
+    "startupOff": "{name} will no longer start at sign-in",
+    "startupOn": "{name} will start at sign-in"
+  },
+  "topbar": {
+    "clearSearch": "Clear search",
+    "maximize": "Maximize",
+    "minimize": "Minimize",
+    "search": "Search for an app, PID or command"
+  },
+  "users": {
+    "appsLabel": "User's apps",
+    "appsOf": "Apps and services of {name}",
+    "empty": "No apps for this user",
+    "note": {
+      "one": "{count} user with active processes",
+      "other": "{count} users with active processes"
+    },
+    "root": "root (system)",
+    "select": "Select a user",
+    "you": "{name} (you)"
+  },
+  "core": {
+    "app": {
+      "name": "Activity Manager",
+      "secureScreen": "Ctrl+Alt+Del screen"
+    },
+    "tray": {
+      "open": "Open Activity Manager",
+      "secure": "Ctrl+Alt+Del screen",
+      "quit": "Quit"
+    },
+    "window": {
+      "security": "Security"
+    },
+    "notify": {
+      "show": "Show",
+      "snooze": "Ignore for 2 hours"
+    },
+    "insights": {
+      "kind": {
+        "app": "app",
+        "container": "container",
+        "background": "background process",
+        "service": "system service"
+      },
+      "disk": {
+        "title": "Disk at {pct}%",
+        "swap": "The system is moving memory to disk ({rate}) because RAM is at {pct}%.",
+        "swapTop": "The system is moving memory to disk ({rate}) because RAM is at {pct}%. The biggest user is {name}, with {size}.",
+        "app": {
+          "write": "{name} is writing {rate}: that's {share}% of all disk I/O.",
+          "read": "{name} is reading {rate}: that's {share}% of all disk I/O.",
+          "readWrite": "{name} is reading and writing {rate}: that's {share}% of all disk I/O."
+        },
+        "appSlow": {
+          "write": "{name} is writing {rate}: that's {share}% of all disk I/O, and other apps are slowing down.",
+          "read": "{name} is reading {rate}: that's {share}% of all disk I/O, and other apps are slowing down.",
+          "readWrite": "{name} is reading and writing {rate}: that's {share}% of all disk I/O, and other apps are slowing down."
+        },
+        "kernel": {
+          "write": "The disk is writing {rate} but no app stands out: it's kernel or file system activity (delayed writes, journal, btrfs).",
+          "read": "The disk is reading {rate} but no app stands out: it's kernel or file system activity (delayed writes, journal, btrfs).",
+          "readWrite": "The disk is reading and writing {rate} but no app stands out: it's kernel or file system activity (delayed writes, journal, btrfs)."
+        },
+        "iowait": "The CPU spends {pct}% of its time waiting for the disk."
+      },
+      "mem": {
+        "title": "Memory at {pct}%",
+        "sentence": "{name} is using {size}, {share}% of RAM; {free} is still available."
+      },
+      "temp": {
+        "title": "CPU at {temp} °C",
+        "container": "Most of the heat comes from {name}, which is using {pct}% of the CPU. Pausing it will cool the CPU down within seconds.",
+        "other": "Most of the heat comes from {name}, which is using {pct}% of the CPU. Reducing its load will cool the CPU down."
+      },
+      "cpu": {
+        "title": "CPU at {pct}%",
+        "spread": "The load is spread across many processes; the heaviest is {name}, at {pct}%.",
+        "top": "{name} is using {pct}% of total CPU, {share}% of the current load."
+      },
+      "gpu": {
+        "title": "GPU at {pct}%",
+        "sentence": "{name} is using {pct}% of the GPU."
+      }
+    },
+    "actions": {
+      "spawnFailed": "Couldn't start {cmd}: {error}",
+      "authRequested": {
+        "one": "Authorization requested for {count} process owned by another user",
+        "other": "Authorization requested for {count} processes owned by other users"
+      },
+      "processes": {
+        "one": "{count} process",
+        "other": "{count} processes"
+      },
+      "notContainer": "Not a container",
+      "noTerminal": "No terminal found",
+      "unknown": "Unknown action: {action}",
+      "noPath": "Location not available",
+      "processGone": "The process no longer exists",
+      "stateUnavailable": "state not available",
+      "containerNotFound": "Container not found",
+      "processNotFound": "Process not found",
+      "noCommand": "Type a command"
+    },
+    "services": {
+      "timeout": "systemctl didn't respond within a minute",
+      "notAllowed": "Action not allowed: {verb}",
+      "invalidName": "Invalid service name: {unit}",
+      "invalidScope": "Invalid scope: {scope}",
+      "done": {
+        "start": "Service “{name}” started",
+        "stop": "Service “{name}” stopped",
+        "restart": "Service “{name}” restarted",
+        "enable": "Service “{name}” enabled at startup",
+        "disable": "Service “{name}” disabled at startup",
+        "mask": "Service “{name}” masked",
+        "unmask": "Service “{name}” unmasked"
+      },
+      "verb": {
+        "start": "start",
+        "stop": "stop",
+        "restart": "restart",
+        "enable": "enable",
+        "disable": "disable",
+        "mask": "mask",
+        "unmask": "unmask"
+      },
+      "denied": "Authorization denied or canceled: couldn't {verb} “{name}”.",
+      "failed": "Couldn't {verb} “{name}”.",
+      "failedWhy": "Couldn't {verb} “{name}”: {why}",
+      "why": {
+        "notFound": "the service doesn't exist",
+        "notLoaded": "the service isn't loaded",
+        "failed": "the service failed (details with journalctl -xeu {unit})"
+      }
+    },
+    "startup": {
+      "permissionDenied": "permission denied",
+      "fileNotFound": "file not found",
+      "invalid": "Invalid startup entry",
+      "gone": "The startup entry “{id}” no longer exists",
+      "writeFailed": "Couldn't change “{name}”: {error}"
+    },
+    "network": {
+      "others": "Other users and system",
+      "dataUnavailable": "data not available",
+      "unavailable": "network not available"
+    },
+    "session": {
+      "unknownAction": "Unknown action: {action}"
+    },
+    "groups": {
+      "session": "Login session {n}",
+      "systemdUser": "systemd (user)",
+      "userManager": "User service manager"
+    },
+    "gpu": {
+      "engine": {
+        "render": "3D",
+        "copy": "Copy",
+        "video": "Video",
+        "videoEncode": "Video Encode",
+        "videoEnhance": "Video Processing",
+        "compute": "Compute"
+      },
+      "engineOn": "{engine} (GPU {n})"
+    },
+    "settings": {
+      "unavailable": "settings not available",
+      "shortcutsRejected": "KDE didn't accept the shortcuts: try again after restarting the session"
+    },
+    "history": {
+      "unavailable": "app history not available"
+    },
+    "disk": {
+      "usb": "Removable (USB)",
+      "nvme": "NVMe SSD",
+      "hdd": "Hard disk",
+      "ssd": "SSD"
+    }
+  }
+}

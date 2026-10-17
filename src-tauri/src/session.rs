@@ -38,7 +38,7 @@ pub fn act(verb: &str) -> Result<(), String> {
             }
         }
         "suspend" => spawn("systemctl", &["suspend"]),
-        _ => return Err(format!("Azione sconosciuta: {verb}")),
+        _ => return Err(crate::i18n::tf("session.unknownAction", &[("action", verb.to_string())])),
     }
     Ok(())
 }

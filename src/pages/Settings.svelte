@@ -3,26 +3,31 @@
   import Switch from "../components/Switch.svelte";
   import { pill } from "../lib/pill";
   import { themeFade } from "../lib/motion.svelte";
+  import { t, type LangPref } from "../lib/i18n.svelte";
+  import { num } from "../lib/format";
 
-  const THEMES: [Theme, string, string][] = [
-    ["graphite", "Grafite", "Scuro e opaco"],
-    ["paper", "Carta", "Chiaro, per ambienti luminosi"],
-    ["glass", "Vetro", "Trasparente: dietro si vede il desktop sfocato"],
+  // name and description: settings.themes.<theme>.name / .desc
+  const THEMES: Theme[] = ["graphite", "paper", "glass"];
+  const LANGS: [LangPref, string][] = [
+    ["auto", "settings.language.auto"],
+    ["it", "settings.language.it"],
+    ["en", "settings.language.en"],
   ];
-  const RATES: [number, string][] = [
-    [500, "0,5 s"],
-    [1000, "1 s"],
-    [2000, "2 s"],
-    [5000, "5 s"],
-  ];
+  const RATES = [500, 1000, 2000, 5000];
   const s = $derived(settings.v);
+
+  // a sentence with {placeholders} split into text and placeholder names, to put key caps in their place
+  const pieces = (key: string) => t(key).split(/(\{\w+\})/).filter(Boolean);
 </script>
+
+{#snippet secureKeys()}<span class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>{t("settings.keys.del")}</kbd></span>{/snippet}
+{#snippet taskKeys()}<span class="keys"><kbd>Ctrl</kbd><kbd>{t("settings.keys.shift")}</kbd><kbd>Esc</kbd></span>{/snippet}
 
 <div class="page">
   <section>
-    <h2>Aspetto</h2>
-    <div class="themes" role="radiogroup" aria-label="Tema">
-      {#each THEMES as [id, name, desc]}
+    <h2>{t("settings.appearance.title")}</h2>
+    <div class="themes" role="radiogroup" aria-label={t("settings.appearance.theme")}>
+      {#each THEMES as id}
         <button class="theme" role="radio" aria-checked={s.theme === id} class:on={s.theme === id} onclick={() => themeFade(() => settings.set({ theme: id }))}>
           <span class="pv pv-{id}">
             <span class="pv-side"><i></i><i></i><i></i><i></i></span>
@@ -31,68 +36,80 @@
               <span class="pv-table"><i></i><i></i><i></i><i></i></span>
             </span>
           </span>
-          <span class="tname">{name}</span>
-          <span class="tdesc">{desc}</span>
+          <span class="tname">{t(`settings.themes.${id}.name`)}</span>
+          <span class="tdesc">{t(`settings.themes.${id}.desc`)}</span>
         </button>
       {/each}
     </div>
   </section>
 
   <section>
-    <h2>Aggiornamento</h2>
+    <h2>{t("settings.language.title")}</h2>
     <div class="row">
       <div class="txt">
-        <span class="label">Frequenza di aggiornamento</span>
-        <span class="desc">Ogni quanto si rileggono processi e grafici. Più lenta consuma meno batteria.</span>
+        <span class="label">{t("settings.language.label")}</span>
+        <span class="desc">{t("settings.language.desc")}</span>
       </div>
-      <div class="seg" role="radiogroup" aria-label="Frequenza di aggiornamento" use:pill>
-        {#each RATES as [ms, label]}
-          <button role="radio" aria-checked={s.intervalMs === ms} class:on={s.intervalMs === ms} onclick={() => settings.set({ intervalMs: ms })}>{label}</button>
+      <div class="seg" role="radiogroup" aria-label={t("settings.language.label")} use:pill>
+        {#each LANGS as [id, key]}
+          <button role="radio" aria-checked={s.language === id} class:on={s.language === id} onclick={() => settings.set({ language: id })}>{t(key)}</button>
         {/each}
       </div>
     </div>
   </section>
 
   <section>
-    <h2>Tastiera</h2>
+    <h2>{t("settings.refresh.title")}</h2>
     <div class="row">
       <div class="txt">
-        <span class="label">Scorciatoie come in Windows</span>
-        <span class="desc">
-          <span class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Canc</kbd></span> apre la schermata di sicurezza,
-          <span class="keys"><kbd>Ctrl</kbd><kbd>Maiusc</kbd><kbd>Esc</kbd></span> apre Gestione attività.
-        </span>
+        <span class="label">{t("settings.refresh.label")}</span>
+        <span class="desc">{t("settings.refresh.desc")}</span>
       </div>
-      <Switch label="Scorciatoie come in Windows" checked={s.shortcuts} onchange={(v) => settings.set({ shortcuts: v })} />
+      <div class="seg" role="radiogroup" aria-label={t("settings.refresh.label")} use:pill>
+        {#each RATES as ms}
+          <button role="radio" aria-checked={s.intervalMs === ms} class:on={s.intervalMs === ms} onclick={() => settings.set({ intervalMs: ms })}>{t("format.seconds", { s: num(ms / 1000, ms % 1000 ? 1 : 0) })}</button>
+        {/each}
+      </div>
     </div>
   </section>
 
   <section>
-    <h2>Avvisi e barra di sistema</h2>
+    <h2>{t("settings.keyboard.title")}</h2>
     <div class="row">
       <div class="txt">
-        <span class="label">Avvisami quando qualcosa è al limite</span>
-        <span class="desc">Una notifica quando disco, memoria, CPU o temperatura sono al massimo, con il motivo e l'app responsabile.</span>
+        <span class="label">{t("settings.keyboard.label")}</span>
+        <span class="desc">{#each pieces("settings.keyboard.desc") as p}{#if p === "{secure}"}{@render secureKeys()}{:else if p === "{taskmgr}"}{@render taskKeys()}{:else}{p}{/if}{/each}</span>
       </div>
-      <Switch label="Avvisi" checked={s.alerts} onchange={(v) => settings.set({ alerts: v })} />
-    </div>
-    <div class="row">
-      <div class="txt">
-        <span class="label">Resta nella barra di sistema</span>
-        <span class="desc">Chiudendo la finestra l'app continua a sorvegliare il sistema e si riapre all'istante.</span>
-      </div>
-      <Switch label="Resta nella barra di sistema" checked={s.tray} onchange={(v) => settings.set({ tray: v })} />
-    </div>
-    <div class="row">
-      <div class="txt">
-        <span class="label">Avvia all'accesso</span>
-        <span class="desc">Parte nascosta nella barra di sistema, così <span class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Canc</kbd></span> risponde subito.</span>
-      </div>
-      <Switch label="Avvia all'accesso" checked={s.autostart} onchange={(v) => settings.set({ autostart: v })} />
+      <Switch label={t("settings.keyboard.label")} checked={s.shortcuts} onchange={(v) => settings.set({ shortcuts: v })} />
     </div>
   </section>
 
-  <p class="about">Gestione attività 2.0, scritta in Rust con Tauri. Legge i dati direttamente dal kernel, senza servizi aggiuntivi.</p>
+  <section>
+    <h2>{t("settings.system.title")}</h2>
+    <div class="row">
+      <div class="txt">
+        <span class="label">{t("settings.alerts.label")}</span>
+        <span class="desc">{t("settings.alerts.desc")}</span>
+      </div>
+      <Switch label={t("settings.alerts.switch")} checked={s.alerts} onchange={(v) => settings.set({ alerts: v })} />
+    </div>
+    <div class="row">
+      <div class="txt">
+        <span class="label">{t("settings.tray.label")}</span>
+        <span class="desc">{t("settings.tray.desc")}</span>
+      </div>
+      <Switch label={t("settings.tray.label")} checked={s.tray} onchange={(v) => settings.set({ tray: v })} />
+    </div>
+    <div class="row">
+      <div class="txt">
+        <span class="label">{t("settings.autostart.label")}</span>
+        <span class="desc">{#each pieces("settings.autostart.desc") as p}{#if p === "{keys}"}{@render secureKeys()}{:else}{p}{/if}{/each}</span>
+      </div>
+      <Switch label={t("settings.autostart.label")} checked={s.autostart} onchange={(v) => settings.set({ autostart: v })} />
+    </div>
+  </section>
+
+  <p class="about">{t("settings.about")}</p>
 </div>
 
 <style>

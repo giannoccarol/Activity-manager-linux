@@ -9,6 +9,7 @@
   import DataTable from "../components/DataTable.svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import Trace from "../components/Trace.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   // Who is using the network now: per-app speed from TCP/UDP sockets, plus interface status.
   let rows = $state<NetApp[]>([]);
@@ -53,7 +54,7 @@
       <div class="iface">
         <div class="ihead">
           <span class="iname">{n.ssid ?? kind(n.kind)}</span>
-          <span class="faint">{n.ssid ? `${n.kind}, ` : ""}{n.name}{n.link ? `, collegamento a ${bitsStr(n.link / 8)}` : ""}</span>
+          <span class="faint">{n.ssid ? `${n.kind}, ` : ""}{n.name}{n.link ? `, ${t("network.link", { speed: bitsStr(n.link / 8) })}` : ""}</span>
         </div>
         <div class="rates">
           <span><span class="arrow">↓</span>{bitsStr(n.recv)}</span>
@@ -64,27 +65,27 @@
         </div>
       </div>
     {:else}
-      <p class="soft">Nessuna rete connessa.</p>
+      <p class="soft">{t("network.none")}</p>
     {/each}
   </div>
   {#if hidden}
-    <p class="hint">Parte del traffico non è attribuibile a un'app: i protocolli su UDP (come QUIC, usato da YouTube e Google) non espongono i byte per connessione.</p>
+    <p class="hint">{t("network.hint")}</p>
   {/if}
   <div class="pg-panel">
     <DataTable
-      label="Rete per app"
+      label={t("network.label")}
       rows={shown}
       rowKey={(r) => r.key}
       bind:selected
       bind:sortKey
       bind:sortDir
-      empty={loaded ? "Nessuna app sta usando la rete in questo momento" : "Leggo le connessioni…"}
+      empty={loaded ? t("network.empty") : t("network.loading")}
       cols={[
-        { key: "name", label: "App", width: "minmax(220px, 1.2fr)", sort: (r) => r.label.toLowerCase(), cell: name },
-        { key: "total", label: "Ricezione", width: "120px", align: "right", sort: (r) => r.recv + r.send * 0.001, cell: recv },
-        { key: "send", label: "Invio", width: "110px", align: "right", sort: (r) => r.send, cell: send },
-        { key: "conns", label: "Connessioni", width: "110px", align: "right", sort: (r) => r.conns, cell: conns },
-        { key: "remotes", label: "Verso", width: "minmax(200px, 1.4fr)", cell: remotes },
+        { key: "name", label: t("network.app"), width: "minmax(220px, 1.2fr)", sort: (r) => r.label.toLowerCase(), cell: name },
+        { key: "total", label: t("network.receive"), width: "120px", align: "right", sort: (r) => r.recv + r.send * 0.001, cell: recv },
+        { key: "send", label: t("network.send"), width: "110px", align: "right", sort: (r) => r.send, cell: send },
+        { key: "conns", label: t("network.connections"), width: "110px", align: "right", sort: (r) => r.conns, cell: conns },
+        { key: "remotes", label: t("network.remote"), width: "minmax(200px, 1.4fr)", cell: remotes },
       ] satisfies Col<NetApp>[]}
     />
   </div>

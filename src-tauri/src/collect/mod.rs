@@ -5,6 +5,7 @@ pub mod sys;
 
 use crate::cgroup;
 use crate::desktop::{DesktopDb, Icons};
+use crate::i18n::{self, t, tf};
 use crate::model::*;
 use crate::util::{read, read_raw, run, unescape, which};
 use std::collections::HashMap;
@@ -29,6 +30,10 @@ pub struct Collector {
     boot: f64,
     my_uid: u32,
     my_pid: i32,
+    /// Language of the cached names: when it changes, the .desktop names and labels are rebuilt.
+    lang: &'static str,
+    /// Name of the Ctrl+Alt+Del screen in every language (its group is shown as the app itself).
+    secure_names: Vec<String>,
     pub frozen: Vec<String>,
 }
 
@@ -65,6 +70,8 @@ impl Collector {
             boot,
             my_uid: unsafe { libc::getuid() },
             my_pid: std::process::id() as i32,
+            lang: i18n::lang(),
+            secure_names: i18n::all("app.secureScreen"),
             frozen: vec![],
         }
     }
@@ -121,11 +128,11 @@ impl Collector {
             let u = unescape(unit);
             let base = u.rsplit_once('.').map(|x| x.0).unwrap_or(&u).to_string();
             label = if let Some(n) = unit.strip_prefix("session-").and_then(|s| s.strip_suffix(".scope")) {
-                format!("Sessione di accesso {n}")
+                tf("groups.session", &[("n", n.to_string())])
             } else if unit == "init.scope" {
-                if user { "systemd (utente)".into() } else { "systemd".into() }
+                if user { t("groups.systemdUser") } else { "systemd".into() }
             } else if unit.starts_with("user@") {
-                "Gestore dei servizi utente".into()
+                t("groups.userManager")
             } else if !desc.is_empty() && desc != unit && !desc.starts_with('/') {
                 desc
             } else {
@@ -196,7 +203,8 @@ impl Collector {
         let now = Instant::now();
         let dt = self.prev_t.map(|t| now.duration_since(t).as_secs_f64());
         self.prev_t = Some(now);
-        if self.db_t.elapsed() > Duration::from_secs(120) {
+        if self.db_t.elapsed() > Duration::from_secs(120) || self.lang != i18n::lang() {
+            self.lang = i18n::lang();
             self.db = DesktopDb::load();
             self.db_t = now;
             self.meta.clear();
@@ -330,8 +338,8 @@ impl Collector {
             if a.icon.is_none() {
                 a.icon = a.procs.iter().find_map(|p| p.icon.clone());
             }
-            if a.procs.first().map(|p| p.pid) == Some(self.my_pid) || a.label.starts_with("Schermata Ctrl") {
-                a.label = "Gestione attività".into();
+            if a.procs.first().map(|p| p.pid) == Some(self.my_pid) || self.secure_names.iter().any(|n| a.label.starts_with(n.as_str())) {
+                a.label = t("app.name");
             }
             groups.push(Group {
                 key,

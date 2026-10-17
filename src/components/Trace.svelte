@@ -3,6 +3,7 @@
   // 240 ms and then stops: smooth motion, but for three quarters of the time nothing is redrawn.
   import { ambient, flags } from "../lib/motion.svelte";
   import type { Sample } from "../lib/state.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   type Props = {
     samples: Sample[];
@@ -124,7 +125,7 @@
   bind:clientWidth={w}
   bind:clientHeight={h}
   role="img"
-  aria-label="Grafico degli ultimi {window} secondi"
+  aria-label={t("chart.label", { seconds: window })}
   onpointermove={(e) => graticule === "full" && (hoverX = e.offsetX)}
   onpointerleave={() => (hoverX = null)}
   style="--tc:{color}">
@@ -163,7 +164,7 @@
       <div class="tip" class:left={hover.x > w * 0.6} style="left:{hover.x}px">
         <strong>{names ? `${names[0]} ` : ""}{format(hover.v)}</strong>
         {#if hover.v2 !== undefined}<span>{names ? `${names[1]} ` : ""}{format(hover.v2)}</span>{/if}
-        <span class="when">{hover.secs < 1 ? "adesso" : `${hover.secs} s fa`}</span>
+        <span class="when">{hover.secs < 1 ? t("chart.now") : t("chart.secondsAgo", { n: hover.secs })}</span>
       </div>
     {/if}
   {/if}

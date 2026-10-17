@@ -14,11 +14,13 @@ pub struct Settings {
     pub tray: bool,
     pub autostart: bool,
     pub shortcuts: bool,
+    /// "auto" (system language), "it" or "en"
+    pub language: String,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { theme: "graphite".into(), interval_ms: 1000, alerts: true, tray: true, autostart: false, shortcuts: true }
+        Settings { theme: "graphite".into(), interval_ms: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto".into() }
     }
 }
 
@@ -46,12 +48,21 @@ impl Settings {
 
 const CAD: u32 = 218103815; // Ctrl+Alt+Del (Qt key code)
 const CSE: u32 = 117440512; // Ctrl+Shift+Esc
-const LAUNCH: [&str; 4] = ["gestione-attivita.desktop", "_launch", "Gestione attività", "Gestione attività"];
-const SECURE: [&str; 4] = ["gestione-attivita-sicurezza.desktop", "_launch", "Schermata Ctrl+Alt+Canc", "Schermata Ctrl+Alt+Canc"];
 const LOGOUT: [&str; 4] = ["ksmserver", "Log Out", "", ""];
 
-fn as_list(v: &[&str]) -> String {
-    format!("[{}]", v.iter().map(|x| format!("'{}'", x.replace('\'', "\\'"))).collect::<Vec<_>>().join(", "))
+/// kglobalaccel ids: [component, action, friendly component name, friendly action name] (names in the current language).
+fn launch_id() -> [String; 4] {
+    let n = crate::i18n::t("app.name");
+    ["gestione-attivita.desktop".into(), "_launch".into(), n.clone(), n]
+}
+
+fn secure_id() -> [String; 4] {
+    let n = crate::i18n::t("app.secureScreen");
+    ["gestione-attivita-sicurezza.desktop".into(), "_launch".into(), n.clone(), n]
+}
+
+fn as_list<S: AsRef<str>>(v: &[S]) -> String {
+    format!("[{}]", v.iter().map(|x| format!("'{}'", x.as_ref().replace('\'', "\\'"))).collect::<Vec<_>>().join(", "))
 }
 
 fn keys(k: &[u32]) -> String {
@@ -78,14 +89,14 @@ pub fn apply_shortcuts(on: bool) -> bool {
     if on {
         kga("setForeignShortcutKeys", &[as_list(&LOGOUT), keys(&[])]);
         let mut ok = true;
-        for (id, k) in [(&SECURE, CAD), (&LAUNCH, CSE)] {
-            kga("doRegister", &[as_list(id)]);
-            ok &= kga("setForeignShortcutKeys", &[as_list(id), keys(&[k])]);
+        for (id, k) in [(secure_id(), CAD), (launch_id(), CSE)] {
+            kga("doRegister", &[as_list(&id)]);
+            ok &= kga("setForeignShortcutKeys", &[as_list(&id), keys(&[k])]);
         }
         ok
     } else {
-        for id in [&SECURE, &LAUNCH] {
-            kga("setForeignShortcutKeys", &[as_list(id), keys(&[])]);
+        for id in [secure_id(), launch_id()] {
+            kga("setForeignShortcutKeys", &[as_list(&id), keys(&[])]);
         }
         kga("setForeignShortcutKeys", &[as_list(&LOGOUT), keys(&[CAD])])
     }
@@ -98,7 +109,7 @@ pub fn apply_autostart(on: bool, exe: &Path) {
     if on {
         let _ = std::fs::create_dir_all(f.parent().unwrap_or(Path::new("/")));
         let body = format!(
-            "[Desktop Entry]\nType=Application\nName=Gestione attività\nComment=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc\nExec={} --tray\nIcon=gestione-attivita\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
+            "[Desktop Entry]\nType=Application\nName=Activity Manager\nName[it]=Gestione attività\nComment=Stays in the system tray, ready for Ctrl+Alt+Del\nComment[it]=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc\nExec={} --tray\nIcon=gestione-attivita\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
             exe.display()
         );
         let _ = std::fs::write(f, body);

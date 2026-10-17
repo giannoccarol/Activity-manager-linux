@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Installs Gestione attività for the current user (KDE Plasma 6, Wayland):
+# Installs Activity Manager (Gestione attività) for the current user (KDE Plasma 6, Wayland):
 #   Ctrl+Alt+Del   → Windows-style security screen (Lock, Switch user, Sign out, Task Manager)
-#   Ctrl+Shift+Esc → Gestione attività
+#   Ctrl+Shift+Esc → Activity Manager
 # History and settings are kept. A previous Python version, if any, is moved to the trash.
 set -euo pipefail
 
@@ -50,8 +50,10 @@ echo "→ Menu entries…"
 cat > "$APPS/gestione-attivita.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Gestione attività
+Name=Activity Manager
+Name[it]=Gestione attività
 GenericName=Task Manager
+GenericName[it]=Gestione attività
 Comment=Processes, performance, app history, network, startup apps, users and services
 Comment[it]=Processi, prestazioni, cronologia, rete, app di avvio, utenti e servizi
 Exec=$BIN/gestione-attivita
@@ -85,7 +87,8 @@ mkdir -p "$CONF/autostart" "$CONF/gestione-attivita"
 cat > "$CONF/autostart/gestione-attivita.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Gestione attività
+Name=Activity Manager
+Name[it]=Gestione attività
 Comment=Stays in the system tray, ready for Ctrl+Alt+Del
 Comment[it]=Resta nella barra di sistema, pronta per Ctrl+Alt+Canc
 Exec=$BIN/gestione-attivita --tray
@@ -110,7 +113,7 @@ echo "→ Keyboard shortcuts…"
 SHORTCUTS="$CONF/kglobalshortcutsrc"
 [ -f "$SHORTCUTS" ] && [ ! -f "$SHORTCUTS.bak-gestione-attivita" ] && cp "$SHORTCUTS" "$SHORTCUTS.bak-gestione-attivita"
 if "$DEST/bin/gestione-attivita" --apply-shortcuts; then
-    echo "  Ctrl+Alt+Del opens the security screen, Ctrl+Shift+Esc opens Gestione attività"
+    echo "  Ctrl+Alt+Del opens the security screen, Ctrl+Shift+Esc opens Activity Manager"
 else
     echo "  KDE did not respond: assign the shortcuts in System Settings → Shortcuts."
 fi

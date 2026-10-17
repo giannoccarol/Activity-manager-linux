@@ -118,11 +118,11 @@ export async function runBench(): Promise<string> {
     typed.push(f1(performance.now() - t0));
   }
   out.push(`Search, per keystroke (ms): ${typed.join(", ")}`);
-  // animated reordering: click the Nome and CPU headers, then watch the frames
+  // animated reordering: click the Name, CPU and Memory headers (by position), then watch the frames
   const heads = [...document.querySelectorAll<HTMLButtonElement>(".head .h")];
   const sortGaps: number[] = [];
-  for (const label of ["Nome", "CPU", "Memoria", "CPU"]) {
-    heads.find((h) => h.textContent?.trim().startsWith(label))?.click();
+  for (const i of [0, 2, 3, 2]) {
+    heads[i]?.click();
     sortGaps.push(...(await gapsDuring(450)));
   }
   out.push(`Animated re-sorting (4 clicks): ${sortGaps.length} frames, ${sortGaps.filter((g) => g > 25).length} over 25 ms, worst ${f1(Math.max(...sortGaps))} ms`);

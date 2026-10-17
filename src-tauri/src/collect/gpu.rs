@@ -42,16 +42,23 @@ pub struct Gpus {
     tick: u64,
 }
 
-fn engine_label(e: &str) -> &str {
-    match e {
-        "render" | "rcs" | "gfx" | "graphics" => "3D",
-        "copy" | "bcs" | "sdma" => "Copia",
-        "video" | "vcs" | "dec" => "Video",
-        "enc" => "Codifica video",
-        "video-enhance" | "vecs" => "Elaborazione video",
-        "compute" | "ccs" => "Calcolo",
-        other => other,
-    }
+/// Engine name shown in the UI, in the current language (unknown engines keep the kernel name).
+fn engine_label(e: &str) -> String {
+    let key = match e {
+        "render" | "rcs" | "gfx" | "graphics" => "render",
+        "copy" | "bcs" | "sdma" => "copy",
+        "video" | "vcs" | "dec" => "video",
+        "enc" => "videoEncode",
+        "video-enhance" | "vecs" => "videoEnhance",
+        "compute" | "ccs" => "compute",
+        other => return other.to_string(),
+    };
+    crate::i18n::t(&format!("gpu.engine.{key}"))
+}
+
+/// "3D (GPU 1)": engine and GPU index, for the processes when there are several GPUs.
+fn engine_on(e: &str, gpu: usize) -> String {
+    crate::i18n::tf("gpu.engineOn", &[("engine", engine_label(e)), ("n", gpu.to_string())])
 }
 
 fn pci_name(vendor: &str, device: &str) -> String {
@@ -182,7 +189,7 @@ impl Gpus {
             if nv && name != "nvidia-smi" && p.ppid != self.my_pid {
                 nv_clients += 1;
             }
-            let (mut best, mut best_eng, mut pmem) = (0.0f64, String::new(), 0u64);
+            let (mut best, mut best_eng, mut pmem) = (0.0f64, (String::new(), 0usize), 0u64);
             for fd in fds {
                 let Some(txt) = read_raw(format!("/proc/{}/fdinfo/{fd}", p.pid)) else { continue };
                 let (mut pdev, mut cid) = (None, None);
@@ -233,10 +240,10 @@ impl Gpus {
                 for (e, v) in &ns {
                     if let Some(pv) = prev.ns.get(e) {
                         let u = (v.saturating_sub(*pv) as f64 / (el * 1e9) / *cap.get(e).unwrap_or(&1) as f64 * 100.0).max(0.0);
-                        *ent.entry(engine_label(e).to_string()).or_default() += u;
+                        *ent.entry(engine_label(e)).or_default() += u;
                         if u > best {
                             best = u;
-                            best_eng = format!("{} (GPU {gidx})", engine_label(e));
+                            best_eng = (e.clone(), gidx);
                         }
                     }
                 }
@@ -244,10 +251,10 @@ impl Gpus {
                     if let Some((pc, pt)) = prev.cyc.get(e) {
                         if t > pt {
                             let u = (c.saturating_sub(*pc) as f64 / (t - pt) as f64 * 100.0).max(0.0);
-                            *ent.entry(engine_label(e).to_string()).or_default() += u;
+                            *ent.entry(engine_label(e)).or_default() += u;
                             if u > best {
                                 best = u;
-                                best_eng = format!("{} (GPU {gidx})", engine_label(e));
+                                best_eng = (e.clone(), gidx);
                             }
                         }
                     }
@@ -255,7 +262,7 @@ impl Gpus {
             }
             p.gpu = best.min(100.0);
             if best >= 0.05 {
-                p.gpu_engine = if self.devs.len() > 1 { best_eng } else { best_eng.split(" (").next().unwrap_or("").to_string() };
+                p.gpu_engine = if self.devs.len() > 1 { engine_on(&best_eng.0, best_eng.1) } else { engine_label(&best_eng.0) };
             }
             p.gpu_mem = pmem;
         }
@@ -283,7 +290,7 @@ impl Gpus {
                 if let Some(c) = &d.card {
                     if let Some(b) = read(format!("{c}/device/gpu_busy_percent")).and_then(|v| v.parse::<f64>().ok()) {
                         util = util.max(b);
-                        eng.entry("3D".into()).or_insert(b);
+                        eng.entry(engine_label("render")).or_insert(b);
                     }
                     if let (Some(u), Some(t)) = (read(format!("{c}/device/mem_info_vram_used")), read(format!("{c}/device/mem_info_vram_total"))) {
                         g.mem_used = u.parse().unwrap_or(0);
@@ -300,7 +307,7 @@ impl Gpus {
                 let nd = self.nv.lock().map(|x| x.clone()).unwrap_or_default();
                 if status == "active" && nd.at.map(|t| t.elapsed() < Duration::from_secs(6)).unwrap_or(false) {
                     util = nd.util;
-                    eng.insert("3D".into(), nd.util);
+                    eng.insert(engine_label("render"), nd.util);
                     g.mem_used = nd.mem_used;
                     g.temp = nd.temp;
                 }

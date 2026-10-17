@@ -2,7 +2,7 @@
   <img src="src-tauri/icons/icon.svg" width="112" alt="">
 </p>
 
-<h1 align="center">Gestione attività</h1>
+<h1 align="center">Activity Manager</h1>
 
 <p align="center">
   The Windows Task Manager, rebuilt for Linux and KDE Plasma.<br>
@@ -17,10 +17,10 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/processes-glass.png" alt="Gestione attività, Processes page with the Glass theme">
+  <img src="docs/screenshots/processes-glass.png" alt="Activity Manager, Processes page with the Glass theme">
 </p>
 
-> The user interface is currently in Italian (*Gestione attività* means "Task Manager"). Everything else, from this page to the code, is in English.
+> The interface is available in **English** and **Italian** (where the app is called *Gestione attività*). It follows the system language and can be changed in Settings.
 
 ---
 
@@ -28,9 +28,9 @@
 
 On Windows, when the computer slows down, you press Ctrl+Alt+Del and within two seconds you can see what is using what. On Linux the tools exist, but they are scattered between the terminal and system monitors, and none of them answers the question that matters: **why** is the disk at 100%?
 
-Gestione attività puts everything into a familiar window, reads the data straight from the kernel and reasons about it:
+Activity Manager puts everything into a familiar window, reads the data straight from the kernel and reasons about it:
 
-> **Disk at 97%**: **postgres-dev** is writing 845 MB/s, 99% of all disk I/O, and the other apps are suffering.
+> **Disk at 97%**: **postgres-dev** is writing 845 MB/s: that's 99% of all disk I/O, and other apps are slowing down.
 > &nbsp;&nbsp;&nbsp;&nbsp;`Show` · `Pause` · `Stop`
 
 ## Features
@@ -66,6 +66,7 @@ Gestione attività puts everything into a familiar window, reads the data straig
 **Look and feel**
 - Three minimal themes: **Graphite** (dark), **Paper** (light) and **Glass**. Glass uses a transparent window with **real KWin blur** of whatever is behind it (Wayland protocol `ext-background-effect-v1`), not a background picture.
 - Window buttons on the right as in KDE, rounded corners with a thin outline.
+- English and Italian, from two JSON dictionaries shared by the interface and the backend (`src/locales/en.json`, `src/locales/it.json`).
 - Short, polished animations: indicators that glide between items, pages that slide in, rows that reorder, numbers that count up. The ones tied to live updates only run while the window is focused.
 
 **Lightweight**
@@ -117,8 +118,8 @@ Optional: `docker` or `podman` for containers, `nvidia-utils` for NVIDIA GPU dat
 The release binary is built on Arch Linux (x86_64) and needs glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
 ```bash
-tar xf gestione-attivita-2.0.0-linux-x86_64.tar.gz
-cd gestione-attivita-2.0.0-linux-x86_64
+tar xf gestione-attivita-2.1.0-linux-x86_64.tar.gz
+cd gestione-attivita-2.1.0-linux-x86_64
 ./install.sh
 ```
 
@@ -199,7 +200,8 @@ Layout:
 src/                 interface (Svelte 5, TypeScript)
   pages/             one page per menu entry, plus the Ctrl+Alt+Del screen
   components/        process table, charts, menus, dialogs…
-  lib/               state, Italian number formatting, animations, benchmark
+  lib/               state, i18n, number formatting, animations, benchmark
+  locales/           en.json and it.json: every string of the interface and the backend
 src-tauri/src/
   collect/           processes, system (CPU, memory, disks, network), GPU
   extra/             app history, per-app network, startup apps, services
@@ -216,4 +218,4 @@ Everything stays on your computer: the app does not use the network and sends no
 
 ## License
 
-Gestione attività is free software, released under the [GNU General Public License v3.0 or later](LICENSE).
+Activity Manager is free software, released under the [GNU General Public License v3.0 or later](LICENSE).

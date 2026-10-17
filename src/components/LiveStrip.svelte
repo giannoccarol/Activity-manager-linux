@@ -6,6 +6,7 @@
   import { bits, num, pct0, rate, size } from "../lib/format";
   import type { Resource } from "../lib/types";
   import Trace from "./Trace.svelte";
+  import { t } from "../lib/i18n.svelte";
 
   let { onopen }: { onopen?: (r: Resource) => void } = $props();
 
@@ -31,7 +32,7 @@
     const disk = s.disks.reduce((a, d) => (d.active > a.active ? d : a), s.disks[0]);
     const g = s.gpus.reduce((a, x) => (x.util > a.util ? x : a), s.gpus[0]);
     const [mu, mt] = [size(s.mem.used), size(s.mem.total)];
-    const verb = disk && disk.write > disk.read * 2 ? "scrive" : "legge";
+    const verb = disk && disk.write > disk.read * 2 ? "strip.writing" : "strip.reading";
     return [
       {
         key: "cpu",
@@ -43,17 +44,17 @@
         hot: (s.cpu.temp ?? 0) >= 90,
         max: 100,
       },
-      { key: "mem", name: "Memoria", value: s.mem.pct, text: pct0(s.mem.pct), unit: "%", detail: [`${mu[0]} di ${mt.join(" ")}`], max: 100 },
+      { key: "mem", name: t("common.memory"), value: s.mem.pct, text: pct0(s.mem.pct), unit: "%", detail: [t("common.ofTotal", { used: mu[0], total: mt.join(" ") })], max: 100 },
       {
         key: "disk",
-        name: "Disco",
+        name: t("common.disk"),
         value: disk?.active ?? 0,
         text: pct0(disk?.active ?? 0),
         unit: "%",
-        detail: disk ? [`${verb} ${rate(Math.max(disk.read, disk.write)).join(" ")}`] : [],
+        detail: disk ? [t(verb, { rate: rate(Math.max(disk.read, disk.write)).join(" ") })] : [],
         max: 100,
       },
-      { key: "net", name: "Rete", value: rx + tx, text: nv, unit: nu, detail: [`↓ ${bits(rx).join(" ")}`, `↑ ${bits(tx).join(" ")}`], max: "auto" },
+      { key: "net", name: t("common.network"), value: rx + tx, text: nv, unit: nu, detail: [`↓ ${bits(rx).join(" ")}`, `↑ ${bits(tx).join(" ")}`], max: "auto" },
       {
         key: "gpu",
         name: "GPU",
@@ -86,7 +87,7 @@
   }
 </script>
 
-<section class="strip" aria-label="Utilizzo delle risorse">
+<section class="strip" aria-label={t("strip.label")}>
   {#each segs as sg (sg.key)}
     {@const level = alertRes.get(sg.key)}
     <button class="seg {level ?? ''}" style="--c: var(--{sg.key})" onclick={() => onopen?.(sg.key)}>

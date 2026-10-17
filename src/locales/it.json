@@ -1,0 +1,587 @@
+{
+  "app": {
+    "name": "Gestione attività"
+  },
+  "chart": {
+    "label": "Grafico degli ultimi {seconds} secondi",
+    "now": "adesso",
+    "secondsAgo": "{n} s fa"
+  },
+  "common": {
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "collecting": "Raccolgo i primi dati…",
+    "commandLine": "Riga di comando",
+    "disk": "Disco",
+    "memory": "Memoria",
+    "name": "Nome",
+    "network": "Rete",
+    "noItems": "Nessun elemento",
+    "notReadable": "Non leggibile senza privilegi",
+    "ofTotal": "{used} di {total}",
+    "priority": "Priorità",
+    "processes": "Processi",
+    "status": "Stato",
+    "threads": "Thread",
+    "user": "Utente"
+  },
+  "details": {
+    "belongsTo": "Appartiene a",
+    "empty": "Nessun processo",
+    "label": "Dettagli dei processi",
+    "noMatch": "Nessun processo corrisponde a «{query}»",
+    "note": {
+      "one": "{n} processo, {threads} thread",
+      "other": "{n} processi, {threads} thread"
+    },
+    "noteFound": {
+      "one": "{n} processo trovato, {threads} thread",
+      "other": "{n} processi trovati, {threads} thread"
+    }
+  },
+  "diagnosis": {
+    "end": "Termina",
+    "hide": "Nascondi per 15 minuti",
+    "next": "Diagnosi successiva",
+    "others": "Seguono {list}",
+    "pager": "{index} di {total}",
+    "pause": "Metti in pausa",
+    "prev": "Diagnosi precedente",
+    "show": "Mostra",
+    "stop": "Arresta"
+  },
+  "dialogs": {
+    "props": {
+      "childOf": "figlio di {pid}",
+      "copy": "Copia",
+      "cwd": "Cartella di lavoro",
+      "filesNotAccessible": "file non accessibili",
+      "inGroup": "{name}, in {group}",
+      "notAccessible": "Non accessibile",
+      "openFiles": {
+        "one": "{count} file aperto",
+        "other": "{count} file aperti"
+      },
+      "openLocation": "Apri percorso",
+      "physicalMemory": "Memoria fisica",
+      "program": "Programma",
+      "started": "Avviato",
+      "startedAgo": "{when}, {since} fa",
+      "swap": "più {size} nello swap",
+      "threads": {
+        "one": "{n} thread",
+        "other": "{n} thread"
+      },
+      "threadsFiles": "Thread e file aperti",
+      "unit": "Unità systemd"
+    },
+    "run": {
+      "admin": "Esegui come amministratore",
+      "intro": "Scrivi il nome di un programma o un comando: parte in background, separato da questa finestra.",
+      "placeholder": "es. dolphin, konsole, firefox --private-window",
+      "run": "Esegui",
+      "title": "Nuova attività"
+    }
+  },
+  "format": {
+    "daysHours": "{d} g {h} h",
+    "hours": "{h} h",
+    "hoursMinutes": "{h} h {m} min",
+    "justNow": "adesso",
+    "lessThanSecond": "meno di 1 s",
+    "minutes": "{m} min",
+    "minutesAgo": "{m} min fa",
+    "seconds": "{s} s",
+    "todayAt": "oggi alle {time}",
+    "yesterdayAt": "ieri alle {time}"
+  },
+  "history": {
+    "clear": "Elimina cronologia",
+    "confirmText": "Si cancellano i consumi registrati di tutte le app, per tutti i giorni. Non si può annullare.",
+    "confirmTitle": "Eliminare la cronologia?",
+    "cpuTime": "Tempo CPU",
+    "days": {
+      "one": "{count} giorno",
+      "other": "{count} giorni"
+    },
+    "diskIo": "Disco letto e scritto",
+    "empty": "Ancora nessun dato per questo periodo: la cronologia si riempie mentre l'app è aperta o nella barra di sistema.",
+    "gpuTime": "Tempo GPU",
+    "lastActive": "Ultima attività",
+    "loading": "Carico la cronologia…",
+    "onlyApps": "Solo app e container",
+    "peakMemory": "Memoria massima",
+    "period": "Periodo",
+    "runs": {
+      "one": "{count} avvio",
+      "other": "{count} avvii"
+    },
+    "today": "Oggi"
+  },
+  "menu": {
+    "collapse": "Comprimi",
+    "copyCommandLine": "Copia riga di comando",
+    "efficiency": "Modalità efficienza",
+    "endTask": "Termina attività",
+    "expand": "Espandi",
+    "forceEnd": "Termina forzatamente",
+    "on": "attiva",
+    "openLocation": "Apri percorso file",
+    "openShell": "Apri una shell",
+    "pause": "Metti in pausa",
+    "properties": "Proprietà",
+    "restart": "Riavvia",
+    "resume": "Riprendi",
+    "showLogs": "Mostra log",
+    "stopContainer": "Arresta il container",
+    "suspend": "Sospendi"
+  },
+  "mock": {
+    "apps": {
+      "discoverNotifier": "Notifiche di Discover",
+      "remminaApplet": "Applet di Remmina"
+    },
+    "insights": {
+      "diskSentence": "{name} sta scrivendo {rate}: è il {pct}% di tutto l'I/O del disco, e le altre app ne risentono.",
+      "diskTitle": "Disco al {pct}%",
+      "tempSentence": "Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Metterlo in pausa la raffredda in pochi secondi.",
+      "tempTitle": "CPU a {temp} °C"
+    },
+    "startup": {
+      "discoverComment": "Aggiornamenti disponibili",
+      "remminaComment": "Connessioni desktop remoto",
+      "teamsComment": "Client non ufficiale di Microsoft Teams"
+    }
+  },
+  "nav": {
+    "alerts": {
+      "one": "{count} problema da guardare",
+      "other": "{count} problemi da guardare"
+    },
+    "details": "Dettagli",
+    "history": "Cronologia app",
+    "label": "Sezioni",
+    "network": "Rete",
+    "performance": "Prestazioni",
+    "processes": "Processi",
+    "services": "Servizi",
+    "settings": "Impostazioni",
+    "startup": "App di avvio",
+    "users": "Utenti"
+  },
+  "network": {
+    "app": "App",
+    "connections": "Connessioni",
+    "empty": "Nessuna app sta usando la rete in questo momento",
+    "hint": "Parte del traffico non è attribuibile a un'app: i protocolli su UDP (come QUIC, usato da YouTube e Google) non espongono i byte per connessione.",
+    "label": "Rete per app",
+    "link": "collegamento a {speed}",
+    "loading": "Leggo le connessioni…",
+    "none": "Nessuna rete connessa.",
+    "receive": "Ricezione",
+    "remote": "Verso",
+    "send": "Invio"
+  },
+  "performance": {
+    "activeTime": "Attività",
+    "available": "Disponibile",
+    "avgResponse": "Risposta media",
+    "axisStart": "60 secondi",
+    "cached": "In cache",
+    "capacity": "Capacità",
+    "disk": "Disco {n}",
+    "gpuActive": "Attiva",
+    "gpuSleeping": "Sospesa per risparmiare energia",
+    "gpuSuspended": "Sospesa",
+    "inUse": "In uso",
+    "link": "Collegamento",
+    "logical": "Per processore",
+    "notConnected": "Non connessa",
+    "overall": "Complessivo",
+    "ram": "{size} di RAM",
+    "read": "Lettura",
+    "receive": "Ricezione",
+    "resources": "Risorse",
+    "send": "Invio",
+    "speed": "Velocità",
+    "temperature": "Temperatura",
+    "total": "Totale",
+    "transfer": "Trasferimento",
+    "uptime": "Acceso da",
+    "utilization": "Utilizzo",
+    "who": {
+      "cpu": "Chi sta usando la CPU",
+      "disk": "Chi sta usando il disco",
+      "gpu": "Chi sta usando la GPU",
+      "mem": "Chi sta usando la memoria"
+    },
+    "write": "Scrittura"
+  },
+  "priority": {
+    "efficiency": "Efficienza",
+    "high": "Alta",
+    "low": "Bassa",
+    "lowest": "Minima (efficienza)",
+    "normal": "Normale"
+  },
+  "processes": {
+    "efficiency": "Efficienza",
+    "empty": "Nessun processo corrisponde a «{query}». Prova con il nome dell'app, il PID o una parte della riga di comando.",
+    "end": "Termina",
+    "endNamed": "Termina {name}",
+    "filterLabel": "Filtra per tipo",
+    "filters": {
+      "all": "Tutto",
+      "app": "App",
+      "bg": "In background",
+      "ctr": "Container",
+      "sys": "Di sistema"
+    },
+    "gpuEngine": "Motore GPU",
+    "moreActions": "Altre azioni",
+    "newTask": "Nuova attività",
+    "sections": {
+      "app": "App",
+      "bg": "In background",
+      "ctr": "Container",
+      "sys": "Di sistema"
+    },
+    "status": {
+      "efficiency": "Efficienza",
+      "paused": "In pausa",
+      "running": "In esecuzione",
+      "stopped": "Sospeso"
+    }
+  },
+  "secure": {
+    "host": "{user} su {host}",
+    "lock": "Blocca",
+    "logout": "Esci",
+    "power": "Alimentazione",
+    "reboot": "Riavvia…",
+    "shutdown": "Arresta il sistema…",
+    "suspend": "Sospendi",
+    "switchUser": "Cambia utente"
+  },
+  "services": {
+    "boot": {
+      "alias": "Alias",
+      "automatic": "Automatico",
+      "generated": "Generato",
+      "linked": "Collegato",
+      "manual": "Manuale",
+      "masked": "Disattivato",
+      "onDemand": "Su richiesta",
+      "transient": "Temporaneo"
+    },
+    "description": "Descrizione",
+    "empty": "Nessun servizio in questo elenco",
+    "filterLabel": "Filtra i servizi",
+    "filters": {
+      "all": "Tutti",
+      "failed": "Con errori",
+      "running": "In esecuzione",
+      "stopped": "Arrestati"
+    },
+    "groups": {
+      "system": "Servizi di sistema",
+      "user": "Servizi dell'utente"
+    },
+    "loading": "Leggo i servizi…",
+    "menu": {
+      "autostart": "Avvio automatico",
+      "goToProcesses": "Vai ai processi",
+      "mask": "Disattiva del tutto",
+      "showLog": "Mostra il registro",
+      "unmask": "Riattiva il servizio"
+    },
+    "restart": "Riavvia",
+    "start": "Avvia",
+    "startup": "Avvio",
+    "state": {
+      "failed": "Errore",
+      "running": "In esecuzione",
+      "starting": "In avvio",
+      "stopped": "Arrestato"
+    },
+    "stop": "Arresta"
+  },
+  "settings": {
+    "about": "Gestione attività 2.0, scritta in Rust con Tauri. Legge i dati direttamente dal kernel, senza servizi aggiuntivi.",
+    "alerts": {
+      "desc": "Una notifica quando disco, memoria, CPU o temperatura sono al massimo, con il motivo e l'app responsabile.",
+      "label": "Avvisami quando qualcosa è al limite",
+      "switch": "Avvisi"
+    },
+    "appearance": {
+      "theme": "Tema",
+      "title": "Aspetto"
+    },
+    "autostart": {
+      "desc": "Parte nascosta nella barra di sistema, così {keys} risponde subito.",
+      "label": "Avvia all'accesso"
+    },
+    "keyboard": {
+      "desc": "{secure} apre la schermata di sicurezza, {taskmgr} apre Gestione attività.",
+      "label": "Scorciatoie come in Windows",
+      "title": "Tastiera"
+    },
+    "keys": {
+      "del": "Canc",
+      "shift": "Maiusc"
+    },
+    "language": {
+      "auto": "Automatica",
+      "desc": "Automatica segue la lingua del sistema.",
+      "en": "English",
+      "it": "Italiano",
+      "label": "Lingua dell'interfaccia",
+      "title": "Lingua"
+    },
+    "refresh": {
+      "desc": "Ogni quanto si rileggono processi e grafici. Più lenta consuma meno batteria.",
+      "label": "Frequenza di aggiornamento",
+      "title": "Aggiornamento"
+    },
+    "system": {
+      "title": "Avvisi e barra di sistema"
+    },
+    "themes": {
+      "glass": {
+        "desc": "Trasparente: dietro si vede il desktop sfocato",
+        "name": "Vetro"
+      },
+      "graphite": {
+        "desc": "Scuro e opaco",
+        "name": "Grafite"
+      },
+      "paper": {
+        "desc": "Chiaro, per ambienti luminosi",
+        "name": "Carta"
+      }
+    },
+    "tray": {
+      "desc": "Chiudendo la finestra l'app continua a sorvegliare il sistema e si riapre all'istante.",
+      "label": "Resta nella barra di sistema"
+    }
+  },
+  "startup": {
+    "atLogin": "All'accesso",
+    "command": "Comando",
+    "copyCommand": "Copia il comando",
+    "disable": "Disattiva",
+    "disabled": "Disattivata",
+    "empty": "Nessuna app parte all'accesso",
+    "enable": "Attiva",
+    "enabled": "Attiva",
+    "loading": "Carico l'elenco…",
+    "note": {
+      "one": "{count} app parte all'accesso",
+      "other": "{count} app partono all'accesso"
+    },
+    "noteDisabled": {
+      "one": "{count} disattivata",
+      "other": "{count} disattivate"
+    },
+    "openFile": "Apri il file di avvio",
+    "source": "Origine",
+    "sourceSystem": "Di sistema",
+    "sourceUser": "Aggiunta da te",
+    "switch": "Avvia {name} all'accesso"
+  },
+  "strip": {
+    "label": "Utilizzo delle risorse",
+    "reading": "legge {rate}",
+    "writing": "scrive {rate}"
+  },
+  "toasts": {
+    "commandCopied": "Comando copiato",
+    "commandLineCopied": "Riga di comando copiata",
+    "copied": "Copiato negli appunti",
+    "historyCleared": "Cronologia eliminata",
+    "onlyInApp": "Disponibile solo nell'app",
+    "propsOnlyInApp": "Le proprietà sono disponibili solo nell'app",
+    "started": "Avviato {cmd}",
+    "startupOff": "{name} non partirà più all'accesso",
+    "startupOn": "{name} partirà all'accesso"
+  },
+  "topbar": {
+    "clearSearch": "Cancella ricerca",
+    "maximize": "Ingrandisci",
+    "minimize": "Riduci a icona",
+    "search": "Cerca un'app, un PID o un comando"
+  },
+  "users": {
+    "appsLabel": "App dell'utente",
+    "appsOf": "App e servizi di {name}",
+    "empty": "Nessuna app per questo utente",
+    "note": {
+      "one": "{count} utente con processi attivi",
+      "other": "{count} utenti con processi attivi"
+    },
+    "root": "root (sistema)",
+    "select": "Seleziona un utente",
+    "you": "{name} (tu)"
+  },
+  "core": {
+    "app": {
+      "name": "Gestione attività",
+      "secureScreen": "Schermata Ctrl+Alt+Canc"
+    },
+    "tray": {
+      "open": "Apri Gestione attività",
+      "secure": "Schermata Ctrl+Alt+Canc",
+      "quit": "Esci"
+    },
+    "window": {
+      "security": "Sicurezza"
+    },
+    "notify": {
+      "show": "Mostra",
+      "snooze": "Ignora per 2 ore"
+    },
+    "insights": {
+      "kind": {
+        "app": "app",
+        "container": "container",
+        "background": "processo in background",
+        "service": "servizio di sistema"
+      },
+      "disk": {
+        "title": "Disco al {pct}%",
+        "swap": "Il sistema sta spostando memoria su disco ({rate}) perché la RAM è al {pct}%.",
+        "swapTop": "Il sistema sta spostando memoria su disco ({rate}) perché la RAM è al {pct}%. Chi ne occupa di più è {name}, con {size}.",
+        "app": {
+          "write": "{name} sta scrivendo {rate}: è il {share}% di tutto l'I/O del disco.",
+          "read": "{name} sta leggendo {rate}: è il {share}% di tutto l'I/O del disco.",
+          "readWrite": "{name} sta leggendo e scrivendo {rate}: è il {share}% di tutto l'I/O del disco."
+        },
+        "appSlow": {
+          "write": "{name} sta scrivendo {rate}: è il {share}% di tutto l'I/O del disco, e le altre app ne risentono.",
+          "read": "{name} sta leggendo {rate}: è il {share}% di tutto l'I/O del disco, e le altre app ne risentono.",
+          "readWrite": "{name} sta leggendo e scrivendo {rate}: è il {share}% di tutto l'I/O del disco, e le altre app ne risentono."
+        },
+        "kernel": {
+          "write": "Il disco sta scrivendo {rate} ma nessuna app spicca: è attività del kernel o del filesystem (scritture differite, journal, btrfs).",
+          "read": "Il disco sta leggendo {rate} ma nessuna app spicca: è attività del kernel o del filesystem (scritture differite, journal, btrfs).",
+          "readWrite": "Il disco sta leggendo e scrivendo {rate} ma nessuna app spicca: è attività del kernel o del filesystem (scritture differite, journal, btrfs)."
+        },
+        "iowait": "La CPU passa il {pct}% del tempo ad aspettare il disco."
+      },
+      "mem": {
+        "title": "Memoria al {pct}%",
+        "sentence": "{name} usa {size}, il {share}% della RAM; restano liberi {free}."
+      },
+      "temp": {
+        "title": "CPU a {temp} °C",
+        "container": "Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Metterlo in pausa la raffredda in pochi secondi.",
+        "other": "Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Ridurne il carico la raffredda."
+      },
+      "cpu": {
+        "title": "CPU al {pct}%",
+        "spread": "Il carico è distribuito su molti processi; il più pesante è {name}, con il {pct}%.",
+        "top": "{name} usa il {pct}% della CPU totale, il {share}% del carico attuale."
+      },
+      "gpu": {
+        "title": "GPU al {pct}%",
+        "sentence": "{name} usa il {pct}% della GPU."
+      }
+    },
+    "actions": {
+      "spawnFailed": "Impossibile avviare {cmd}: {error}",
+      "authRequested": {
+        "one": "Richiesta l'autorizzazione per {count} processo di un altro utente",
+        "other": "Richiesta l'autorizzazione per {count} processi di altri utenti"
+      },
+      "processes": {
+        "one": "{count} processo",
+        "other": "{count} processi"
+      },
+      "notContainer": "Non è un container",
+      "noTerminal": "Nessun terminale trovato",
+      "unknown": "Azione sconosciuta: {action}",
+      "noPath": "Percorso non disponibile",
+      "processGone": "Il processo non esiste più",
+      "stateUnavailable": "stato non disponibile",
+      "containerNotFound": "Container non trovato",
+      "processNotFound": "Processo non trovato",
+      "noCommand": "Scrivi un comando"
+    },
+    "services": {
+      "timeout": "systemctl non ha risposto entro un minuto",
+      "notAllowed": "Azione non consentita: {verb}",
+      "invalidName": "Nome di servizio non valido: {unit}",
+      "invalidScope": "Contesto non valido: {scope}",
+      "done": {
+        "start": "Servizio «{name}» avviato",
+        "stop": "Servizio «{name}» arrestato",
+        "restart": "Servizio «{name}» riavviato",
+        "enable": "Servizio «{name}» abilitato all'avvio",
+        "disable": "Servizio «{name}» disabilitato all'avvio",
+        "mask": "Servizio «{name}» mascherato",
+        "unmask": "Servizio «{name}» smascherato"
+      },
+      "verb": {
+        "start": "avviare",
+        "stop": "arrestare",
+        "restart": "riavviare",
+        "enable": "abilitare",
+        "disable": "disabilitare",
+        "mask": "mascherare",
+        "unmask": "smascherare"
+      },
+      "denied": "Autorizzazione negata o annullata: impossibile {verb} «{name}».",
+      "failed": "Impossibile {verb} «{name}».",
+      "failedWhy": "Impossibile {verb} «{name}»: {why}",
+      "why": {
+        "notFound": "il servizio non esiste",
+        "notLoaded": "il servizio non è caricato",
+        "failed": "il servizio non è riuscito (dettagli con journalctl -xeu {unit})"
+      }
+    },
+    "startup": {
+      "permissionDenied": "permesso negato",
+      "fileNotFound": "file non trovato",
+      "invalid": "Voce di avvio non valida",
+      "gone": "La voce di avvio «{id}» non esiste più",
+      "writeFailed": "Impossibile modificare «{name}»: {error}"
+    },
+    "network": {
+      "others": "Altri utenti e sistema",
+      "dataUnavailable": "dati non disponibili",
+      "unavailable": "rete non disponibile"
+    },
+    "session": {
+      "unknownAction": "Azione sconosciuta: {action}"
+    },
+    "groups": {
+      "session": "Sessione di accesso {n}",
+      "systemdUser": "systemd (utente)",
+      "userManager": "Gestore dei servizi utente"
+    },
+    "gpu": {
+      "engine": {
+        "render": "3D",
+        "copy": "Copia",
+        "video": "Video",
+        "videoEncode": "Codifica video",
+        "videoEnhance": "Elaborazione video",
+        "compute": "Calcolo"
+      },
+      "engineOn": "{engine} (GPU {n})"
+    },
+    "settings": {
+      "unavailable": "impostazioni non disponibili",
+      "shortcutsRejected": "KDE non ha accettato le scorciatoie: riprova dopo aver riavviato la sessione"
+    },
+    "history": {
+      "unavailable": "cronologia non disponibile"
+    },
+    "disk": {
+      "usb": "Rimovibile (USB)",
+      "nvme": "SSD NVMe",
+      "hdd": "Disco rigido",
+      "ssd": "SSD"
+    }
+  }
+}

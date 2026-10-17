@@ -23,7 +23,8 @@ struct DiskT {
 
 struct DiskStatic {
     model: String,
-    kind: String,
+    /// "usb", "nvme", "hdd" or "ssd": translated when the snapshot is built
+    kind: &'static str,
     capacity: u64,
     system: bool,
 }
@@ -220,16 +221,16 @@ impl Sys {
             let rot = read(format!("{base}/queue/rotational")).as_deref() == Some("1");
             let usb = std::fs::canonicalize(&base).map(|p| p.to_string_lossy().contains("/usb")).unwrap_or(false);
             let kind = if usb {
-                "Rimovibile (USB)"
+                "usb"
             } else if d.starts_with("nvme") {
-                "SSD NVMe"
+                "nvme"
             } else if rot {
-                "Disco rigido"
+                "hdd"
             } else {
-                "SSD"
+                "ssd"
             };
             let capacity = read(format!("{base}/size")).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0) * 512;
-            disks.insert(d, DiskStatic { model, kind: kind.into(), capacity, system: false });
+            disks.insert(d, DiskStatic { model, kind, capacity, system: false });
         }
         if let Some(m) = read_raw("/proc/mounts") {
             for l in m.lines() {
@@ -267,7 +268,7 @@ impl Sys {
             let mut d = Disk {
                 name: name.to_string(),
                 model: st.model.clone(),
-                kind: st.kind.clone(),
+                kind: crate::i18n::t(&format!("disk.{}", st.kind)),
                 active: 0.0,
                 read: 0.0,
                 write: 0.0,

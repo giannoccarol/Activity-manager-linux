@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "gestione-attivita",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "identifier": "com.gestioneattivita.app",
   "build": {
     "frontendDist": "../dist",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Gestione attività",
+        "title": "Activity Manager",
         "width": 1360,
         "height": 860,
         "minWidth": 980,

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import Icon from "./Icon.svelte";
+  import { t } from "../lib/i18n.svelte";
   import { fadeq, pop } from "../lib/motion.svelte";
 
   let { title, onclose, children, footer, width = 520 }: { title: string; onclose: () => void; children: Snippet; footer?: Snippet; width?: number } = $props();
@@ -26,7 +27,7 @@
   <div bind:this={box} transition:pop={{ scale: 0.97, duration: 200 }} class="dialog" role="dialog" tabindex="-1" aria-modal="true" aria-labelledby={id} style:width="{width}px" onclick={(e) => e.stopPropagation()}>
     <header>
       <h2 {id}>{title}</h2>
-      <button class="x" aria-label="Chiudi" onclick={onclose}><Icon name="x" size={15} /></button>
+      <button class="x" aria-label={t("common.close")} onclick={onclose}><Icon name="x" size={15} /></button>
     </header>
     <div class="body">{@render children()}</div>
     {#if footer}<footer>{@render footer()}</footer>{/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { rise } from "../lib/motion.svelte";
   import { app } from "../lib/state.svelte";
+  import { t } from "../lib/i18n.svelte";
   import Icon from "./Icon.svelte";
   import WindowControls from "./WindowControls.svelte";
 
@@ -23,9 +24,9 @@
     {#if searchable}
       <label class="search">
         <Icon name="search" size={15} />
-        <input bind:this={input} bind:value={app.search} placeholder="Cerca un'app, un PID o un comando" spellcheck="false"
+        <input bind:this={input} bind:value={app.search} placeholder={t("topbar.search")} spellcheck="false"
           onkeydown={(e) => e.key === "Escape" && (app.search = "")} />
-        {#if app.search}<button aria-label="Cancella ricerca" onclick={() => (app.search = "")}><Icon name="x" size={13} /></button>{/if}
+        {#if app.search}<button aria-label={t("topbar.clearSearch")} onclick={() => (app.search = "")}><Icon name="x" size={13} /></button>{/if}
       </label>
     {/if}
     <WindowControls />

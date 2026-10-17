@@ -180,7 +180,7 @@ impl NetApps {
             .map(|(gi, a)| {
                 let (key, label, icon, section) = match gi.map(|i| &snap.groups[i]) {
                     Some(g) => (g.key.clone(), g.label.clone(), g.icon.clone(), g.section),
-                    None => ("other".into(), "Altri utenti e sistema".into(), None, Section::Sys),
+                    None => ("other".into(), crate::i18n::t("network.others"), None, Section::Sys),
                 };
                 let mut r: Vec<(String, (f64, u64))> = a.remotes.into_iter().collect();
                 r.sort_by(|x, y| y.1 .0.total_cmp(&x.1 .0).then(y.1 .1.cmp(&x.1 .1)).then_with(|| x.0.cmp(&y.0)));
