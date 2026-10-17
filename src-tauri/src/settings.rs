@@ -16,11 +16,15 @@ pub struct Settings {
     pub shortcuts: bool,
     /// "auto" (system language), "it" or "en"
     pub language: String,
+    /// check GitHub for a new version at startup and once a day
+    pub updates: bool,
+    /// version the user chose to ignore
+    pub skip_version: String,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { theme: "graphite".into(), interval_ms: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto".into() }
+        Settings { theme: "graphite".into(), interval_ms: 1000, alerts: true, tray: true, autostart: false, shortcuts: true, language: "auto".into(), updates: true, skip_version: String::new() }
     }
 }
 

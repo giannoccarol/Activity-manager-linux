@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { updates } from "../lib/update.svelte";
   import { app, type Page } from "../lib/state.svelte";
   import Icon from "./Icon.svelte";
   import { pill } from "../lib/pill";
@@ -38,6 +39,7 @@
     <button class:active={app.page === "settings"} onclick={() => (app.page = "settings")}>
       <Icon name="settings" size={16} />
       <span>{t("nav.settings")}</span>
+      {#if updates.available}<i class="dot upd" title={t("settings.updates.dot")}></i>{/if}
     </button>
   </div>
 </nav>
@@ -142,6 +144,9 @@
     from {
       transform: scale(0);
     }
+  }
+  .dot.upd {
+    background: var(--cpu);
   }
   .foot {
     margin-top: auto;

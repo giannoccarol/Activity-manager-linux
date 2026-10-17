@@ -5,6 +5,10 @@
   import { themeFade } from "../lib/motion.svelte";
   import { t, type LangPref } from "../lib/i18n.svelte";
   import { num } from "../lib/format";
+  import { updates } from "../lib/update.svelte";
+  import { ui } from "../lib/ui.svelte";
+  import { invoke } from "../lib/api";
+  import { i18n } from "../lib/i18n.svelte";
 
   // name and description: settings.themes.<theme>.name / .desc
   const THEMES: Theme[] = ["graphite", "paper", "glass"];
@@ -18,6 +22,33 @@
 
   // a sentence with {placeholders} split into text and placeholder names, to put key caps in their place
   const pieces = (key: string) => t(key).split(/(\{\w+\})/).filter(Boolean);
+
+  const busy = $derived(updates.phase === "downloading" || updates.phase === "verifying" || updates.phase === "installing");
+  const updateStatus = $derived.by(() => {
+    const info = updates.info;
+    switch (updates.phase) {
+      case "checking":
+        return t("settings.updates.checking");
+      case "downloading":
+        return t("settings.updates.downloading", { pct: Math.round(updates.progress * 100) });
+      case "verifying":
+        return t("settings.updates.verifying");
+      case "installing":
+        return t("settings.updates.installing");
+      case "error":
+        return updates.error ?? "";
+    }
+    if (updates.available && info) {
+      const date = info.published ? new Date(info.published).toLocaleDateString(i18n.tag, { day: "numeric", month: "long", year: "numeric" }) : "";
+      const msg = t("settings.updates.available", { version: info.latest, date });
+      return info.canInstall ? msg : `${msg} ${info.reason ?? ""}`;
+    }
+    if (updates.phase === "uptodate" || (info && !updates.available)) {
+      const at = updates.checkedAt ? t("settings.updates.checkedAt", { time: updates.checkedAt.toLocaleTimeString(i18n.tag, { hour: "2-digit", minute: "2-digit" }) }) : "";
+      return `${t("settings.updates.upToDate")} ${at}`.trim();
+    }
+    return t("settings.updates.never");
+  });
 </script>
 
 {#snippet secureKeys()}<span class="keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>{t("settings.keys.del")}</kbd></span>{/snippet}
@@ -109,7 +140,45 @@
     </div>
   </section>
 
-  <p class="about">{t("settings.about")}</p>
+  <section>
+    <h2>{t("settings.updates.title")}</h2>
+    <div class="row">
+      <div class="txt">
+        <span class="label">{t("settings.updates.version", { name: t("app.name"), version: updates.current })}</span>
+        <span class="desc" class:err={updates.phase === "error"}>{updateStatus}</span>
+        {#if busy}
+          <span class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(updates.progress * 100)}>
+            <i style="transform: scaleX({updates.phase === 'downloading' ? updates.progress : 1})"></i>
+          </span>
+        {:else if updates.available}
+          <button class="link" onclick={() => settings.set({ skipVersion: updates.info?.latest ?? "" })}>{t("settings.updates.skip")}</button>
+        {/if}
+      </div>
+      <div class="ctl">
+        {#if updates.available && !busy}
+          <button class="btn" onclick={() => (ui.dialog = { kind: "notes" })}>{t("settings.updates.notes")}</button>
+          {#if updates.info?.canInstall}
+            <button class="btn primary" onclick={() => updates.install()}>{t("settings.updates.install")}</button>
+          {:else if updates.info?.url}
+            <button class="btn" onclick={() => invoke("open_url", { url: updates.info!.url }, () => null)}>{t("dialogs.notes.github")}</button>
+          {/if}
+        {:else if !busy}
+          <button class="btn" disabled={updates.phase === "checking"} onclick={() => updates.check()}>
+            {updates.phase === "checking" ? t("settings.updates.checking") : t("settings.updates.check")}
+          </button>
+        {/if}
+      </div>
+    </div>
+    <div class="row">
+      <div class="txt">
+        <span class="label">{t("settings.updates.auto")}</span>
+        <span class="desc">{t("settings.updates.autoDesc")}</span>
+      </div>
+      <Switch label={t("settings.updates.auto")} checked={s.updates} onchange={(v) => settings.set({ updates: v })} />
+    </div>
+  </section>
+
+  <p class="about">{t("settings.about", { name: t("app.name"), version: updates.current })}</p>
 </div>
 
 <style>
@@ -336,6 +405,37 @@
     border-radius: 4px;
     background: var(--raised);
     box-shadow: var(--sheen);
+  }
+  .desc.err {
+    color: var(--crit);
+  }
+  .bar {
+    display: block;
+    width: 240px;
+    height: 3px;
+    margin-top: 8px;
+    border-radius: 2px;
+    background: var(--line-soft);
+    overflow: hidden;
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    background: var(--cpu);
+    transform-origin: left;
+    transition: transform 200ms var(--ease-out);
+  }
+  .link {
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 0;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .link:hover {
+    color: var(--text);
   }
   .about {
     max-width: 820px;

@@ -14,6 +14,15 @@ fn main() {
             }
         }
     }
+    if std::env::args().any(|a| a == "--version") {
+        println!("{}", gestione_attivita_lib::version());
+        return;
+    }
+    for (flag, install) in [("--update", true), ("--check-update", false)] {
+        if std::env::args().any(|a| a == flag) {
+            std::process::exit(gestione_attivita_lib::update_cli(install));
+        }
+    }
     if std::env::args().any(|a| a == "--dump") {
         return gestione_attivita_lib::dump();
     }

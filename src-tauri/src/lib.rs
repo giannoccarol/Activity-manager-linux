@@ -11,6 +11,7 @@ mod insights;
 mod model;
 mod session;
 mod settings;
+mod update;
 mod util;
 
 use settings::Settings;
@@ -33,6 +34,8 @@ struct AppState {
     secure_only: AtomicBool,
     /// The UI was (re)loaded: everything must be resent, static fields included.
     resync: Arc<AtomicBool>,
+    /// last result of the update check
+    update: Arc<Mutex<Option<update::UpdateInfo>>>,
 }
 
 // ------------------------------------------------------------------ windows
@@ -241,6 +244,61 @@ fn notify(app: AppHandle, res: String, title: String, body: String) {
     });
 }
 
+// ------------------------------------------------------------------ updates
+
+/// Notification for a new version (only shown while the window is not on screen).
+fn notify_update(app: AppHandle, info: &update::UpdateInfo) {
+    let name = i18n::t("app.name");
+    let title = i18n::tf("update.notifyTitle", &[("version", info.latest.clone())]);
+    let body = i18n::t("update.notifyBody");
+    let action = format!("--action=open={}", i18n::t("update.notifyAction"));
+    std::thread::spawn(move || {
+        let out = std::process::Command::new("notify-send")
+            .args(["-a", &name, "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita", &action, "-w", &title, &body])
+            .output();
+        if let Ok(o) = out {
+            if String::from_utf8_lossy(&o.stdout).trim() == "open" {
+                let a = app.clone();
+                let _ = app.run_on_main_thread(move || {
+                    show_main(&a);
+                    let _ = a.emit("navigate", "settings");
+                });
+            }
+        }
+    });
+}
+
+/// Checks for updates 30 s after start and then once a day, if enabled in the settings.
+fn start_update_checks(app: &AppHandle) {
+    let app = app.clone();
+    std::thread::Builder::new()
+        .name("updates".into())
+        .spawn(move || {
+            std::thread::sleep(Duration::from_secs(30));
+            let mut notified = String::new();
+            loop {
+                let (enabled, skip) = app.state::<AppState>().settings.lock().map(|s| (s.updates, s.skip_version.clone())).unwrap_or((false, String::new()));
+                if enabled {
+                    if let Ok(info) = update::check() {
+                        if let Ok(mut u) = app.state::<AppState>().update.lock() {
+                            *u = Some(info.clone());
+                        }
+                        let _ = app.emit("update-checked", &info);
+                        if info.newer && info.latest != skip {
+                            let visible = app.get_webview_window("main").map(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(false)).unwrap_or(false);
+                            if !visible && notified != info.latest {
+                                notified = info.latest.clone();
+                                notify_update(app.clone(), &info);
+                            }
+                        }
+                    }
+                }
+                std::thread::sleep(Duration::from_secs(24 * 3600));
+            }
+        })
+        .expect("updates thread");
+}
+
 fn start_collector(app: &AppHandle, st: &AppState) {
     if st.started.swap(true, Ordering::SeqCst) {
         return;
@@ -429,6 +487,52 @@ async fn set_settings(app: AppHandle, state: State<'_, AppState>, patch: serde_j
     Ok(new)
 }
 
+/// Opens a page of the project on GitHub in the browser (only github.com addresses of this repository).
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    if !url.starts_with(&format!("https://github.com/{}", update::REPO)) {
+        return Err("url not allowed".into());
+    }
+    std::process::Command::new("xdg-open").arg(&url).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn app_version() -> String {
+    update::current_version()
+}
+
+#[tauri::command]
+async fn check_update(state: State<'_, AppState>) -> Result<update::UpdateInfo, String> {
+    let info = update::check()?;
+    if let Ok(mut u) = state.update.lock() {
+        *u = Some(info.clone());
+    }
+    Ok(info)
+}
+
+/// Downloads and installs the new version; progress goes to the "update-progress" event.
+#[tauri::command]
+async fn install_update(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    let cached = state.update.lock().ok().and_then(|u| u.clone());
+    let info = match cached {
+        Some(i) if i.newer => i,
+        _ => update::check()?,
+    };
+    if !info.newer {
+        return Err(i18n::t("update.upToDate"));
+    }
+    let show = app.get_webview_window("main").map(|w| w.is_visible().unwrap_or(false)).unwrap_or(false);
+    let a = app.clone();
+    update::install(&info, show, &move |s| {
+        let payload = match s {
+            update::Step::Download(done, total) => serde_json::json!({ "phase": "download", "done": done, "total": total }),
+            update::Step::Verify => serde_json::json!({ "phase": "verify" }),
+            update::Step::Install => serde_json::json!({ "phase": "install" }),
+        };
+        let _ = a.emit("update-progress", payload);
+    })
+}
+
 /// System language ("it" or "en"), used by the interface when the language is "auto".
 #[tauri::command]
 fn system_lang() -> &'static str {
@@ -507,6 +611,17 @@ pub fn shortcuts(on: bool) -> bool {
     settings::apply_shortcuts(on)
 }
 
+/// Version of this build (`gestione-attivita --version`).
+pub fn version() -> String {
+    update::current_version()
+}
+
+/// `--update` (install) and `--check-update` from a terminal.
+pub fn update_cli(install: bool) -> i32 {
+    i18n::set(&Settings::load().language);
+    update::cli(install)
+}
+
 /// Prints a snapshot as JSON (diagnostics: `gestione-attivita --dump`), in the language of the settings.
 pub fn dump() {
     i18n::set(&Settings::load().language);
@@ -533,6 +648,7 @@ pub fn run() {
         netapps: Mutex::new(extra::netapp::NetApps::new()),
         secure_only: AtomicBool::new(secure),
         resync: Arc::new(AtomicBool::new(true)),
+        update: Arc::new(Mutex::new(None)),
     };
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
@@ -564,6 +680,9 @@ pub fn run() {
                 if let Err(e) = build_tray(&h) {
                     eprintln!("system tray unavailable: {e}");
                 }
+            }
+            if !secure {
+                start_update_checks(&h);
             }
             if secure {
                 open_secure(&h);
@@ -605,6 +724,10 @@ pub fn run() {
             set_settings,
             session_info,
             system_lang,
+            app_version,
+            open_url,
+            check_update,
+            install_update,
             session,
             history,
             history_clear,

@@ -67,6 +67,12 @@ Activity Manager puts everything into a familiar window, reads the data straight
 - Three minimal themes: **Graphite** (dark), **Paper** (light) and **Glass**. Glass uses a transparent window with **real KWin blur** of whatever is behind it (Wayland protocol `ext-background-effect-v1`), not a background picture.
 - Window buttons on the right as in KDE, rounded corners with a thin outline.
 - English and Italian, from two JSON dictionaries shared by the interface and the backend (`src/locales/en.json`, `src/locales/it.json`).
+
+**Updates**
+- Checks the GitHub releases at startup and once a day (can be turned off in Settings). A dot on Settings and, while the app is in the tray, a notification tell you when a new version is out.
+- **Update now** downloads the release package, verifies its SHA-256 against the published checksum, makes sure the new binary starts on your system, then installs it and restarts the app. Your settings, shortcuts and start-at-login choice are kept.
+- From a terminal: `gestione-attivita --update`.
+- Copies installed by a package manager are only notified: the package manager stays in charge.
 - Short, polished animations: indicators that glide between items, pages that slide in, rows that reorder, numbers that count up. The ones tied to live updates only run while the window is focused.
 
 **Lightweight**
@@ -118,8 +124,8 @@ Optional: `docker` or `podman` for containers, `nvidia-utils` for NVIDIA GPU dat
 The release binary is built on Arch Linux (x86_64) and needs glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
 ```bash
-tar xf gestione-attivita-2.1.0-linux-x86_64.tar.gz
-cd gestione-attivita-2.1.0-linux-x86_64
+tar xf gestione-attivita-2.2.0-linux-x86_64.tar.gz
+cd gestione-attivita-2.2.0-linux-x86_64
 ./install.sh
 ```
 
@@ -140,6 +146,10 @@ npm install
 npx tauri build
 ./install.sh
 ```
+
+### Updating
+
+The app updates itself from **Settings → Updates**, or run `gestione-attivita --update`. Installing a newer package with `./install.sh` works too.
 
 ### Uninstall
 
@@ -193,6 +203,8 @@ Useful command line options:
 | `--dump` | print a JSON snapshot of the data and exit |
 | `--bench` | measure smoothness, page switching, search, scrolling and CPU usage; results in `~/.cache/gestione-attivita/bench.txt` |
 | `--apply-shortcuts`, `--remove-shortcuts` | assign or remove the KDE shortcuts |
+| `--version` | print the version |
+| `--check-update`, `--update` | check for a new version, or download and install it |
 
 Layout:
 
@@ -210,11 +222,12 @@ src-tauri/src/
   blur.rs            real KWin blur
   session.rs         lock, switch user, sign out, power
   settings.rs        settings, KDE shortcuts, autostart
+  update.rs          update check, download, checksum, installation
 ```
 
 ## Privacy
 
-Everything stays on your computer: the app does not use the network and sends no data anywhere. The history is a SQLite file in `~/.local/share/gestione-attivita/history.sqlite`.
+Everything stays on your computer. The only network request is the update check: once a day the app asks the GitHub API for the latest release of this repository, and downloads the package when you choose to update. No other data is sent, and the check can be turned off in Settings. The history is a SQLite file in `~/.local/share/gestione-attivita/history.sqlite`.
 
 ## License
 
