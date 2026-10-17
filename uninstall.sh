@@ -8,7 +8,9 @@ CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
 DEST="$DATA/gestione-attivita"
 
 [ -x "$DEST/bin/gestione-attivita" ] && "$DEST/bin/gestione-attivita" --remove-shortcuts || true
+pkill -x gestione-attivi 2>/dev/null || true
 pkill -f "$DEST/bin/gestione-attivita" 2>/dev/null || true
+pkill -f "$HOME/.local/bin/gestione-attivita" 2>/dev/null || true
 rm -f "$HOME/.local/bin/gestione-attivita" "$DEST/bin/gestione-attivita"
 rmdir "$DEST/bin" 2>/dev/null || true
 rm -f "$DATA/applications/gestione-attivita.desktop" "$DATA/applications/gestione-attivita-sicurezza.desktop"

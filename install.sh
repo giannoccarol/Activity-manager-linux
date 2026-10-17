@@ -27,8 +27,13 @@ fi
 
 echo "→ Closing running instances…"
 pkill -f "gestione_attivita.py" 2>/dev/null || true
+# the app may have been started through the ~/.local/bin link (autostart) or directly:
+# match the process name ("gestione-attivi", truncated by the kernel) and both paths
+pkill -x gestione-attivi 2>/dev/null || true
 pkill -f "$DEST/bin/gestione-attivita" 2>/dev/null || true
-sleep 0.5
+pkill -f "$BIN/gestione-attivita" 2>/dev/null || true
+# wait until it has exited, otherwise the new instance would hand over to the old one
+for _ in $(seq 1 25); do pgrep -x gestione-attivi >/dev/null || break; sleep 0.2; done
 
 echo "→ Copying the app to $DEST/bin…"
 mkdir -p "$DEST/bin" "$BIN" "$APPS" "$ICONS/scalable/apps"
