@@ -1,6 +1,6 @@
 //! System resources: CPU, memory, disks, network.
 use crate::model::{Cpu, Disk, Mem, Net};
-use crate::util::{read, read_raw, run, which};
+use crate::util::{read, read_raw, run, which, Smooth};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
@@ -39,6 +39,7 @@ pub struct Sys {
     wifi: HashMap<String, (String, f64)>,
     wifi_t: Option<Instant>,
     temp_path: Option<String>,
+    temp: Option<Smooth>,
     pub model: String,
     page: u64,
 }
@@ -125,6 +126,7 @@ impl Sys {
             wifi: HashMap::new(),
             wifi_t: None,
             temp_path: find_temp(),
+            temp: None,
             model,
             page: if page > 0 { page } else { 4096 },
         }
@@ -158,7 +160,15 @@ impl Sys {
             }
         }
         let freq = if freqs.is_empty() { 0.0 } else { freqs.iter().sum::<f64>() / freqs.len() as f64 };
-        let temp = self.temp_path.as_ref().and_then(|p| read(p)).and_then(|v| v.parse::<f64>().ok()).map(|v| v / 1000.0);
+        let raw = self.temp_path.as_ref().and_then(|p| read(p)).and_then(|v| v.parse::<f64>().ok()).map(|v| v / 1000.0);
+        // smoothed: a split-second boost peak must not look like (or alert as) an overheating CPU
+        let temp = raw.map(|v| match &mut self.temp {
+            Some(s) => s.push(v),
+            None => {
+                self.temp = Some(Smooth::new(v));
+                v
+            }
+        });
         Cpu { total, kernel, iowait, per_core: per, freq, temp, model: self.model.clone() }
     }
 

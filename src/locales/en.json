@@ -674,7 +674,7 @@
     }
   },
   "sensors": {
-    "note": "Values since the app started: minimum, maximum and average.",
+    "note": "Values since the app started: minimum, maximum and average. Current temperatures are averaged over the last few seconds, so split-second boost peaks show up only in the maximum.",
     "hottest": "Hottest: {name}, {device}, {value}",
     "reset": "Reset minimums and maximums",
     "cols": {

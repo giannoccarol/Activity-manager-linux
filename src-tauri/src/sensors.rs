@@ -1,9 +1,11 @@
 //! Hardware sensors device by device, like HWiNFO: hwmon (temperatures, fans, voltages, currents,
 //! power), ACPI thermal zones, per-core clocks, GPUs and battery, with min/max/average since start.
-//! Sampled by the collector at every update, so the statistics cover the whole session.
+//! Sampled by the collector at every update, so the statistics cover the whole session. Current
+//! temperatures are smoothed over a few seconds (see util::Smooth); min, max and average use the raw
+//! readings, so boost peaks stay visible as the maximum.
 use crate::i18n::{t, tf};
 use crate::model::Snapshot;
-use crate::util::{read, read_raw};
+use crate::util::{read, read_raw, Smooth};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
@@ -63,6 +65,7 @@ struct Core {
 
 pub struct Sensors {
     stats: HashMap<String, Stat>,
+    smooth: HashMap<String, Smooth>,
     cores: HashMap<(u32, u32), Core>,
     lang: &'static str,
 }
@@ -131,7 +134,7 @@ fn temp_limits(crit: Option<f64>) -> (Option<f64>, Option<f64>) {
 
 impl Sensors {
     pub fn new() -> Self {
-        let mut s = Sensors { stats: HashMap::new(), cores: HashMap::new(), lang: crate::i18n::lang() };
+        let mut s = Sensors { stats: HashMap::new(), smooth: HashMap::new(), cores: HashMap::new(), lang: crate::i18n::lang() };
         s.build_cores();
         s
     }
@@ -396,7 +399,18 @@ impl Sensors {
                     st.max = st.max.max(r.value);
                     st.sum += r.value;
                     st.n += 1;
-                    Reading { avg: st.sum / st.n as f64, min: st.min, max: st.max, id: r.id, label: r.label, sub: r.sub, kind: r.kind, value: r.value, warn: r.warn, crit: r.crit }
+                    let value = if r.kind == "temp" {
+                        match self.smooth.get_mut(&r.id) {
+                            Some(s) => s.push(r.value),
+                            None => {
+                                self.smooth.insert(r.id.clone(), Smooth::new(r.value));
+                                r.value
+                            }
+                        }
+                    } else {
+                        r.value
+                    };
+                    Reading { avg: st.sum / st.n as f64, min: st.min, max: st.max, id: r.id, label: r.label, sub: r.sub, kind: r.kind, value, warn: r.warn, crit: r.crit }
                 })
                 .collect::<Vec<_>>();
             if readings.is_empty() && note.is_none() {

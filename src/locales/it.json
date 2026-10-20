@@ -674,7 +674,7 @@
     }
   },
   "sensors": {
-    "note": "Valori dall'avvio dell'app: minimo, massimo e media.",
+    "note": "Valori dall'avvio dell'app: minimo, massimo e media. Le temperature attuali sono la media degli ultimi secondi: i picchi di un istante dovuti al boost restano solo nel massimo.",
     "hottest": "Il più caldo: {name}, {device}, {value}",
     "reset": "Azzera minimi e massimi",
     "cols": {
