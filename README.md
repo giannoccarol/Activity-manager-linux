@@ -58,6 +58,7 @@ Activity Manager puts everything into a familiar window, reads the data straight
 **Sensors, like HWiNFO**
 - Every sensor of the PC, device by device: CPU package and each core (P-cores and E-cores with their logical CPUs), per-core clocks, GPUs, memory modules, NVMe drives, Wi-Fi card, embedded controller and fans, ACPI thermal zones, battery (voltage, power, wear level, charge cycles).
 - Current value, minimum, maximum and average since the app started, with a reset button, warning colors near the limits and a chart for the selected sensor.
+- Temperatures are shown as the average of the last few seconds. Modern CPUs touch their thermal limit for a split second every time a core boosts, even when almost idle; those peaks stay visible as the maximum instead of making the current value jump between 65 and 100 °C (or triggering a false overheating alert).
 
 **The other pages, as on Windows**
 - **App history**: CPU time, disk, GPU and peak memory per app, for today, the last 7 days or the last 30 days (local SQLite).

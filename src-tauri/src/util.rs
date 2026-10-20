@@ -1,7 +1,7 @@
-//! Small utilities: file reading, external commands, XDG paths.
+//! Small utilities: file reading, external commands, XDG paths, temperature smoothing.
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub fn read(path: impl AsRef<Path>) -> Option<String> {
     std::fs::read_to_string(path).ok().map(|s| s.trim().to_string())
@@ -64,6 +64,31 @@ pub fn run_status(cmd: &str, args: &[&str], timeout: Duration) -> (bool, String)
 /// Runs a command with a timeout and returns stdout (empty on error).
 pub fn run(cmd: &str, args: &[&str], timeout: Duration) -> String {
     run_status(cmd, args, timeout).1
+}
+
+/// Temperature the way the chip holds it over the last seconds: exponential moving average with a
+/// 4 s time constant. The on-die sensors of current CPUs touch the throttle point for a fraction of
+/// a second every time a core boosts, even with the processor almost idle: the raw value read at
+/// that instant is real but says nothing about how hot the chip is. Sustained heat still shows up
+/// within a few seconds.
+pub struct Smooth {
+    v: f64,
+    t: Instant,
+}
+
+impl Smooth {
+    const TAU: f64 = 4.0;
+
+    pub fn new(v: f64) -> Self {
+        Smooth { v, t: Instant::now() }
+    }
+
+    pub fn push(&mut self, v: f64) -> f64 {
+        let dt = self.t.elapsed().as_secs_f64();
+        self.t = Instant::now();
+        self.v += (v - self.v) * (1.0 - (-dt / Self::TAU).exp());
+        self.v
+    }
 }
 
 pub fn which(cmd: &str) -> bool {
