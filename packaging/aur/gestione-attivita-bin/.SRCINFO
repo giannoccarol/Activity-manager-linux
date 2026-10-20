@@ -1,6 +1,6 @@
 pkgbase = gestione-attivita-bin
 	pkgdesc = Windows-style task manager for KDE Plasma, with Ctrl+Alt+Del and Ctrl+Shift+Esc
-	pkgver = 2.3.0
+	pkgver = 2.3.1
 	pkgrel = 1
 	url = https://github.com/giannoccarol/Activity-manager-linux
 	install = gestione-attivita-bin.install
@@ -31,7 +31,7 @@ pkgbase = gestione-attivita-bin
 	conflicts = gestione-attivita
 	options = !strip
 	options = !debug
-	source_x86_64 = https://github.com/giannoccarol/Activity-manager-linux/releases/download/v2.3.0/gestione-attivita-2.3.0-linux-x86_64.tar.gz
-	sha256sums_x86_64 = 3c066c83fab11620f2a5724b2b183f00b28dcd5523b2656a0e2db92c5fdd5a73
+	source_x86_64 = https://github.com/giannoccarol/Activity-manager-linux/releases/download/v2.3.1/gestione-attivita-2.3.1-linux-x86_64.tar.gz
+	sha256sums_x86_64 = 17730ca4313fe2980bada36c918aa1b2bbd76816cb906c7d0c8e9d33e5009bd9
 
 pkgname = gestione-attivita-bin
