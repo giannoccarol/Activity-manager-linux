@@ -71,6 +71,7 @@ Activity Manager puts everything into a familiar window, reads the data straight
 **Look and feel**
 - Three minimal themes: **Graphite** (dark), **Paper** (light) and **Glass**. Glass uses a transparent window with **real KWin blur** of whatever is behind it (Wayland protocol `ext-background-effect-v1`), not a background picture.
 - Window buttons on the right as in KDE, rounded corners with a thin outline.
+- Short, polished animations: indicators that glide between items, pages that slide in, rows that reorder, numbers that count up. The ones tied to live updates only run while the window is focused.
 - English and Italian, from two JSON dictionaries shared by the interface and the backend (`src/locales/en.json`, `src/locales/it.json`).
 
 **Updates**
@@ -78,7 +79,6 @@ Activity Manager puts everything into a familiar window, reads the data straight
 - **Update now** downloads the release package, verifies its SHA-256 against the published checksum, makes sure the new binary starts on your system, then installs it and restarts the app. Your settings, shortcuts and start-at-login choice are kept.
 - From a terminal: `gestione-attivita --update`.
 - Copies installed by a package manager are only notified: the package manager stays in charge.
-- Short, polished animations: indicators that glide between items, pages that slide in, rows that reorder, numbers that count up. The ones tied to live updates only run while the window is focused.
 
 **Lightweight**
 
@@ -150,9 +150,11 @@ Updates come from pacman or your AUR helper: the app only tells you when a new v
 
 Release packages are built by GitHub Actions on Ubuntu 24.04 (x86_64) and need glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13 and later). On older distributions, build from source.
 
+Download `gestione-attivita-<version>-linux-x86_64.tar.gz` from the [latest release](https://github.com/giannoccarol/Activity-manager-linux/releases/latest), then:
+
 ```bash
-tar xf gestione-attivita-2.3.0-linux-x86_64.tar.gz
-cd gestione-attivita-2.3.0-linux-x86_64
+tar xf gestione-attivita-*-linux-x86_64.tar.gz
+cd gestione-attivita-*-linux-x86_64
 ./install.sh
 ```
 
@@ -261,9 +263,29 @@ packaging/           release package (package.sh, verify.sh, README.txt) and the
 
 Release packages are built by GitHub Actions. Pushing a tag `vX.Y.Z` runs [`release.yml`](.github/workflows/release.yml): it checks that the tag matches the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, builds on Ubuntu 24.04, assembles the package with `packaging/package.sh`, checks it the way the in-app updater will (`packaging/verify.sh`: checksum file, layout, `--version`) and attaches it with its `.sha256` to the GitHub release of the tag, creating the release if needed. Every push and pull request is built by [`ci.yml`](.github/workflows/ci.yml), which also builds the AUR package and checks it with namcap. Updating the AUR package after a release is described in [packaging/aur](packaging/aur/README.md).
 
+## Contributing
+
+Bug reports, ideas, translations and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to build the app, try the interface with demo data and add a language.
+
 ## Privacy
 
 Everything stays on your computer. The only network request is the update check: once a day the app asks the GitHub API for the latest release of this repository, and downloads the package when you choose to update. No other data is sent, and the check can be turned off in Settings. The history is a SQLite file in `~/.local/share/gestione-attivita/history.sqlite`.
+
+## Credits
+
+Activity Manager follows the **Windows Task Manager** (Microsoft) in layout and shortcuts, and its Sensors page is modeled on **[HWiNFO](https://www.hwinfo.com)** by Martin Malík. It is built on the work of:
+
+- **[Tauri](https://tauri.app)** (Tauri Programme within The Commons Conservancy): the app framework, the single-instance plugin and the [webkit2gtk-rs](https://github.com/tauri-apps/webkit2gtk-rs) bindings.
+- **[Svelte](https://svelte.dev)** (created by Rich Harris) and **[Vite](https://vite.dev)** (created by Evan You), with their contributors: the interface and its build.
+- **[WebKitGTK](https://webkitgtk.org)** and **[GTK](https://gtk.org)**, through the **[gtk-rs](https://gtk-rs.org)** bindings: rendering, windows and the system tray.
+- **[wayland-rs](https://github.com/Smithay/wayland-rs)** (Elinor Berger and the Smithay project), the `ext-background-effect-v1` protocol of [wayland-protocols](https://gitlab.freedesktop.org/wayland/wayland-protocols) and its implementation in **[KWin](https://invent.kde.org/plasma/kwin)** (KDE): the real blur of the Glass theme.
+- **[rusqlite](https://github.com/rusqlite/rusqlite)** and **[SQLite](https://sqlite.org)**: the app history.
+- **[serde](https://serde.rs)**, **[libc](https://github.com/rust-lang/libc)** and **[sha2](https://github.com/RustCrypto/hashes)** (RustCrypto): data exchange, system calls and update checksums.
+- **[Instrument Sans](https://github.com/Instrument/instrument-sans)** (The Instrument Sans Project Authors, SIL Open Font License 1.1), packaged by [Fontsource](https://fontsource.org): the interface font.
+- **[Breeze icons](https://invent.kde.org/frameworks/breeze-icons)** (KDE, LGPL-3.0-or-later): the terminal icon of the demo data (`public/mock-icons/terminal.svg`).
+- **[The PCI ID Repository](https://pci-ids.ucw.cz)** (Albert Pool, Martin Mareš and volunteers): GPU and device names, read from the `pci.ids` file of your system.
+
+App names and icons in the interface come from the `.desktop` files and the icon theme installed on your system; the logos visible in the screenshots belong to their respective projects.
 
 ## License
 

@@ -1,0 +1,16 @@
+name: Feature request
+description: An idea to make Activity Manager more useful
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation and what you would expect. If Windows Task Manager or another tool already does it, say how.
+    validations:
+      required: true
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Alternatives you considered, mockups, links.

@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work, crashes or shows wrong data
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. Please check first that it also happens with the latest release.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Performance page
+        2. …
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings → Updates, or `gestione-attivita --version`
+      placeholder: "2.3.1"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distribution and desktop
+      placeholder: CachyOS, KDE Plasma 6.5, Wayland
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installed with
+      options:
+        - install.sh from a release package
+        - AUR package (gestione-attivita-bin)
+        - Built from source
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal output
+      description: >
+        Quit the app from the system tray, start `gestione-attivita` from a terminal and paste what it prints.
+        For wrong data, `gestione-attivita --dump` or `--sensors` prints what the app reads: it includes your
+        process list and command lines, so remove anything private.
+      render: text
