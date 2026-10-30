@@ -2,7 +2,7 @@
 
 pkgname=gestione-attivita-bin
 _pkgname=gestione-attivita
-pkgver=2.3.1
+pkgver=2.3.2
 pkgrel=1
 pkgdesc='Windows-style task manager for KDE Plasma, with Ctrl+Alt+Del and Ctrl+Shift+Esc'
 arch=('x86_64')
@@ -24,7 +24,7 @@ conflicts=("$_pkgname")
 options=('!strip' '!debug')
 install="$pkgname.install"
 source_x86_64=("$url/releases/download/v$pkgver/$_pkgname-$pkgver-linux-$CARCH.tar.gz")
-sha256sums_x86_64=('17730ca4313fe2980bada36c918aa1b2bbd76816cb906c7d0c8e9d33e5009bd9')
+sha256sums_x86_64=('d22000f61b2a44c8f2ad7826d295b212970551bc840115d94bf7c86a815029b7')
 
 package() {
   cd "$_pkgname-$pkgver-linux-$CARCH"
