@@ -499,9 +499,11 @@
         "sentence": "{name} usa {size}, il {share}% della RAM; restano liberi {free}."
       },
       "temp": {
-        "title": "CPU a {temp} °C",
-        "container": "Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Metterlo in pausa la raffredda in pochi secondi.",
-        "other": "Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Ridurne il carico la raffredda."
+        "titleLimit": "CPU al limite termico, {temp} °C",
+        "titleMax": "CPU a {temp} °C, vicina al massimo di {max} °C",
+        "cooling": "Succede anche con poco carico: controlla che le ventole girino e che le prese d'aria non siano ostruite.",
+        "container": "Sta rallentando per non scaldarsi oltre. Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Metterlo in pausa la raffredda in pochi secondi.",
+        "other": "Sta rallentando per non scaldarsi oltre. Il calore viene soprattutto da {name}, che usa il {pct}% della CPU. Ridurne il carico la raffredda."
       },
       "cpu": {
         "title": "CPU al {pct}%",

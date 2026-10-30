@@ -90,7 +90,7 @@ export interface Insight {
 
 export interface Snapshot {
   t: number; // seconds (monotonic)
-  cpu: { total: number; kernel: number; perCore: number[]; freq: number; temp: number | null; model: string };
+  cpu: { total: number; kernel: number; perCore: number[]; freq: number; temp: number | null; tempLimit: number | null; tempMax: number | null; model: string };
   mem: { total: number; used: number; available: number; pct: number; swapUsed: number; swapTotal: number; cached: number };
   disks: Disk[];
   nets: Net[];

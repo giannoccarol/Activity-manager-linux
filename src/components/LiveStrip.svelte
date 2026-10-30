@@ -3,7 +3,7 @@
   import { Tween } from "svelte/motion";
   import { cubicOut } from "svelte/easing";
   import { app } from "../lib/state.svelte";
-  import { bits, num, pct0, rate, size } from "../lib/format";
+  import { bits, cpuAtLimit, num, pct0, rate, size } from "../lib/format";
   import type { Resource } from "../lib/types";
   import Trace from "./Trace.svelte";
   import { t } from "../lib/i18n.svelte";
@@ -41,7 +41,7 @@
         text: pct0(s.cpu.total),
         unit: "%",
         detail: [`${num(s.cpu.freq / 1000, 2)} GHz`, s.cpu.temp !== null ? `${pct0(s.cpu.temp)} °C` : ""],
-        hot: (s.cpu.temp ?? 0) >= 90,
+        hot: cpuAtLimit(s.cpu),
         max: 100,
       },
       { key: "mem", name: t("common.memory"), value: s.mem.pct, text: pct0(s.mem.pct), unit: "%", detail: [t("common.ofTotal", { used: mu[0], total: mt.join(" ") })], max: 100 },

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { app } from "../lib/state.svelte";
-  import { bitsStr, ghz, num, pct0, rateStr, sizeStr, uptime } from "../lib/format";
+  import { bitsStr, cpuAtLimit, ghz, num, pct0, rateStr, sizeStr, uptime } from "../lib/format";
   import type { Group } from "../lib/types";
   import Trace from "../components/Trace.svelte";
   import Icon from "../components/Icon.svelte";
@@ -113,7 +113,7 @@
       {#if cur.kind === "cpu"}
         <div><dt>{t("performance.utilization")}</dt><dd>{pct0(s.cpu.total)}%</dd></div>
         <div><dt>{t("performance.speed")}</dt><dd>{ghz(s.cpu.freq)}</dd></div>
-        <div><dt>{t("performance.temperature")}</dt><dd class:hot={(s.cpu.temp ?? 0) >= 90}>{s.cpu.temp !== null ? `${pct0(s.cpu.temp)} °C` : "—"}</dd></div>
+        <div><dt>{t("performance.temperature")}</dt><dd class:hot={cpuAtLimit(s.cpu)}>{s.cpu.temp !== null ? `${pct0(s.cpu.temp)} °C` : "—"}</dd></div>
         <div><dt>{t("common.processes")}</dt><dd>{num(s.counts.procs, 0)}</dd></div>
         <div><dt>{t("common.threads")}</dt><dd>{num(s.counts.threads, 0)}</dd></div>
         <div><dt>{t("performance.uptime")}</dt><dd>{uptime(s.uptime)}</dd></div>

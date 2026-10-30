@@ -57,13 +57,17 @@
     if (q.get("page") && q.get("page")! in TITLES) app.page = q.get("page") as Page;
     if (view !== "secure") subscribe((s) => app.push(s));
     if (isTauri && view !== "secure")
-      import("@tauri-apps/api/event").then(({ listen }) => {
-        listen<string>("navigate", (e) => e.payload in TITLES && (app.page = e.payload as Page));
+      import("@tauri-apps/api/event").then(async ({ listen }) => {
+        const open = (p: string | null) => p && p in TITLES && (app.page = p as Page);
+        await listen<string>("navigate", (e) => open(e.payload));
         listen("bench", async () => {
           const { runBench } = await import("./lib/bench");
           const { invoke } = await import("@tauri-apps/api/core");
           invoke("bench_report", { text: await runBench() });
         });
+        // ready: a just created window is shown now, with the page requested meanwhile (if any)
+        const { invoke } = await import("@tauri-apps/api/core");
+        open(await invoke<string | null>("ui_ready"));
       });
   });
 

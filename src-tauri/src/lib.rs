@@ -41,6 +41,16 @@ struct AppState {
     sensors: Arc<Mutex<Vec<sensors::Device>>>,
     /// set by the Sensors page to reset min/max/average
     sensors_reset: Arc<AtomicBool>,
+    /// the interface of the main window is loaded and listening (see `ui_ready`)
+    ui_ready: AtomicBool,
+    /// main window just created: shown, with this activation token, once its interface is ready
+    pending_show: Mutex<Option<Option<String>>>,
+    /// page to open as soon as the interface of the main window is ready
+    pending_page: Mutex<Option<String>>,
+    /// changes at every show and hide of the main window: a release scheduled earlier is dropped
+    hidden_gen: AtomicU64,
+    /// logical size and maximized state of the last main window, for the next one
+    geometry: Mutex<Option<(f64, f64, bool)>>,
 }
 
 // ------------------------------------------------------------------ windows
@@ -87,10 +97,58 @@ fn show_main(app: &AppHandle) {
     show_main_with(app, None);
 }
 
+/// The main window exists only while it is needed: it is created when first shown and destroyed
+/// after staying hidden in the system tray for this long. Its web view (WebKit) holds 100-150 MB
+/// that an app waiting in the tray all day has no reason to keep; reopening it within this time
+/// is instant, later it takes a fraction of a second.
+const RELEASE_AFTER: Duration = Duration::from_secs(60);
+
+fn build_main(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+    let mut cfg = app.config().app.windows.iter().find(|w| w.label == "main").cloned()?;
+    if let Some((w, h, max)) = app.state::<AppState>().geometry.lock().ok().and_then(|g| *g) {
+        (cfg.width, cfg.height, cfg.maximized) = (w, h, max);
+    }
+    let w = WebviewWindowBuilder::from_config(app, &cfg).ok()?.build().ok()?;
+    // an interface loaded once from the app itself: no need for WebKit's page and resource caches
+    let _ = w.with_webview(|wv| {
+        use webkit2gtk::{CacheModel, WebContextExt, WebViewExt};
+        if let Some(ctx) = wv.inner().context() {
+            ctx.set_cache_model(CacheModel::DocumentViewer);
+        }
+    });
+    Some(w)
+}
+
 fn show_main_with(app: &AppHandle, token: Option<String>) {
     let st = app.state::<AppState>();
     st.secure_only.store(false, Ordering::SeqCst);
+    st.hidden_gen.fetch_add(1, Ordering::SeqCst);
     start_collector(app, &st);
+    // a new window appears once its interface is ready (ui_ready), not as an empty frame;
+    // asked again while it is still loading, it keeps waiting with the newer activation token
+    if let Ok(mut p) = st.pending_show.lock() {
+        if p.is_some() {
+            *p = Some(token);
+            return;
+        }
+        if app.get_webview_window("main").is_some() {
+            drop(p);
+            return reveal_main(app, token);
+        }
+        *p = Some(token);
+    }
+    st.ui_ready.store(false, Ordering::SeqCst);
+    if build_main(app).is_some() {
+        let a = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_secs(4));
+            let b = a.clone();
+            let _ = a.run_on_main_thread(move || reveal_pending(&b));
+        });
+    }
+}
+
+fn reveal_main(app: &AppHandle, token: Option<String>) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
         let _ = w.unminimize();
@@ -99,6 +157,64 @@ fn show_main_with(app: &AppHandle, token: Option<String>) {
     present(app, "main", token);
     if main_glass_on(app) {
         glass(app, "main", true);
+    }
+}
+
+fn reveal_pending(app: &AppHandle) {
+    let pending = app.state::<AppState>().pending_show.lock().ok().and_then(|mut p| p.take());
+    if let Some(token) = pending {
+        reveal_main(app, token);
+    }
+}
+
+/// Hidden in the system tray: the window is destroyed if it stays hidden for RELEASE_AFTER.
+fn schedule_release(app: &AppHandle) {
+    let gen = app.state::<AppState>().hidden_gen.fetch_add(1, Ordering::SeqCst) + 1;
+    let a = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(RELEASE_AFTER);
+        let b = a.clone();
+        let _ = a.run_on_main_thread(move || release_main(&b, gen));
+    });
+}
+
+fn release_main(app: &AppHandle, gen: u64) {
+    let st = app.state::<AppState>();
+    let Some(w) = app.get_webview_window("main") else { return };
+    if st.hidden_gen.load(Ordering::SeqCst) != gen || w.is_visible().unwrap_or(true) {
+        return;
+    }
+    // the next window opens with the same size (the normal one, if it was maximized)
+    let max = w.is_maximized().unwrap_or(false);
+    if let Ok(mut g) = st.geometry.lock() {
+        let size = w.inner_size().ok().zip(w.scale_factor().ok()).map(|(s, f)| s.to_logical::<f64>(f));
+        *g = match (size, *g) {
+            (Some(s), _) if !max => Some((s.width, s.height, false)),
+            (_, Some((w, h, _))) => Some((w, h, max)),
+            _ => None,
+        };
+    }
+    st.ui_ready.store(false, Ordering::SeqCst);
+    // WebKit would keep the page's process (and its memory) cached for a next page: end it
+    let _ = w.with_webview(|wv| {
+        use webkit2gtk::WebViewExt;
+        wv.inner().terminate_web_process();
+    });
+    let _ = w.destroy();
+    // the memory freed by the web view goes back to the system
+    std::thread::spawn(|| {
+        std::thread::sleep(Duration::from_secs(3));
+        unsafe { libc::malloc_trim(0) };
+    });
+}
+
+/// Opens a page of the main window: now if its interface is running, otherwise once it is ready.
+fn navigate(app: &AppHandle, page: &str) {
+    let st = app.state::<AppState>();
+    if st.ui_ready.load(Ordering::SeqCst) && app.get_webview_window("main").is_some() {
+        let _ = app.emit("navigate", page.to_string());
+    } else if let Ok(mut p) = st.pending_page.lock() {
+        *p = Some(page.to_string());
     }
 }
 
@@ -224,17 +340,45 @@ fn snoozed() -> &'static Mutex<HashMap<String, Instant>> {
     S.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// Shows a notification for `secs` seconds and returns the action clicked, if any. Transient, so
+/// it closes by itself: Plasma never closes a notification kept in its history, and
+/// `notify-send -w` would wait for it (and keep a process alive) forever.
+fn notify_send(args: &[String], secs: u64) -> Option<String> {
+    use std::io::Read;
+    use std::process::{Command, Stdio};
+    let mut child = Command::new("notify-send")
+        .args(["-a", &i18n::t("app.name"), "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita", "-e"])
+        .args(["-t", &(secs * 1000).to_string(), "-w"])
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+    // in case the notification server ignores the expiry
+    let deadline = Instant::now() + Duration::from_secs(secs + 30);
+    loop {
+        match child.try_wait() {
+            Ok(Some(_)) => break,
+            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(250)),
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return None;
+            }
+        }
+    }
+    let mut out = String::new();
+    child.stdout.take()?.read_to_string(&mut out).ok()?;
+    Some(out.trim().to_string())
+}
+
 fn notify(app: AppHandle, res: String, title: String, body: String) {
-    let name = i18n::t("app.name");
     let show = format!("--action=open={}", i18n::t("notify.show"));
     let snooze = format!("--action=snooze={}", i18n::t("notify.snooze"));
     std::thread::spawn(move || {
-        let out = std::process::Command::new("notify-send")
-            .args(["-a", &name, "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita"])
-            .args([&show, &snooze, "-w", &title, &body])
-            .output();
-        let Ok(o) = out else { return };
-        match String::from_utf8_lossy(&o.stdout).trim() {
+        let Some(action) = notify_send(&[show, snooze, title, body], 15) else { return };
+        match action.as_str() {
             "open" => {
                 let a = app.clone();
                 let _ = app.run_on_main_thread(move || show_main(&a));
@@ -253,22 +397,16 @@ fn notify(app: AppHandle, res: String, title: String, body: String) {
 
 /// Notification for a new version (only shown while the window is not on screen).
 fn notify_update(app: AppHandle, info: &update::UpdateInfo) {
-    let name = i18n::t("app.name");
     let title = i18n::tf("update.notifyTitle", &[("version", info.latest.clone())]);
     let body = i18n::t("update.notifyBody");
     let action = format!("--action=open={}", i18n::t("update.notifyAction"));
     std::thread::spawn(move || {
-        let out = std::process::Command::new("notify-send")
-            .args(["-a", &name, "-i", "gestione-attivita", "-h", "string:desktop-entry:gestione-attivita", &action, "-w", &title, &body])
-            .output();
-        if let Ok(o) = out {
-            if String::from_utf8_lossy(&o.stdout).trim() == "open" {
-                let a = app.clone();
-                let _ = app.run_on_main_thread(move || {
-                    show_main(&a);
-                    let _ = a.emit("navigate", "settings");
-                });
-            }
+        if notify_send(&[action, title, body], 30).as_deref() == Some("open") {
+            let a = app.clone();
+            let _ = app.run_on_main_thread(move || {
+                show_main(&a);
+                navigate(&a, "settings");
+            });
         }
     });
 }
@@ -387,6 +525,15 @@ fn start_monitor(app: AppHandle, state: State<AppState>) {
             let _ = w.emit("snapshot", s.wire(&mut Default::default()));
         }
     }
+}
+
+/// The interface of the main window is loaded and listening: shows the window if it was just
+/// created, and returns the page to open, if one was requested in the meantime.
+#[tauri::command]
+fn ui_ready(app: AppHandle, state: State<AppState>) -> Option<String> {
+    state.ui_ready.store(true, Ordering::SeqCst);
+    reveal_pending(&app);
+    state.pending_page.lock().ok().and_then(|mut p| p.take())
 }
 
 /// `--bench` results: in ~/.cache/gestione-attivita/bench.txt, with the size of the data sent.
@@ -586,8 +733,9 @@ async fn session(app: AppHandle, verb: String) -> Result<(), String> {
             Ok(())
         }
         "taskmgr" => {
-            close_secure(&app);
+            // main window first: closing the last window would end the app when it has no tray icon
             show_main(&app);
+            close_secure(&app);
             Ok(())
         }
         _ => {
@@ -679,6 +827,9 @@ pub fn dump() {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // two malloc arenas instead of one per busy thread (8 × cores): far less memory left
+    // fragmented by the many short allocations of the collector and the async runtime
+    unsafe { libc::mallopt(libc::M_ARENA_MAX, 2) };
     let args: Vec<String> = std::env::args().collect();
     let secure = args.iter().any(|a| a == "--secure");
     let tray_only = args.iter().any(|a| a == "--tray");
@@ -696,6 +847,11 @@ pub fn run() {
         update: Arc::new(Mutex::new(None)),
         sensors: Arc::new(Mutex::new(vec![])),
         sensors_reset: Arc::new(AtomicBool::new(false)),
+        ui_ready: AtomicBool::new(false),
+        pending_show: Mutex::new(None),
+        pending_page: Mutex::new(None),
+        hidden_gen: AtomicU64::new(0),
+        geometry: Mutex::new(None),
     };
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
@@ -705,13 +861,20 @@ pub fn run() {
                 show_main(app);
                 let a = app.clone();
                 std::thread::spawn(move || {
+                    // a new window loads its interface first
+                    for _ in 0..100 {
+                        if a.state::<AppState>().ui_ready.load(Ordering::SeqCst) {
+                            break;
+                        }
+                        std::thread::sleep(Duration::from_millis(100));
+                    }
                     std::thread::sleep(Duration::from_millis(1500));
                     let _ = a.emit("bench", ());
                 });
             } else if argv.iter().any(|a| a == "--secure-close") {
                 after_secure(app);
             } else if let Some(p) = argv.iter().find_map(|a| a.strip_prefix("--page=")) {
-                let _ = app.emit("navigate", p.to_string());
+                navigate(app, p);
             } else if argv.iter().any(|a| a == "--secure") {
                 open_secure_with(app, token_of(&argv));
             } else if !argv.iter().any(|a| a == "--tray") {
@@ -756,6 +919,7 @@ pub fn run() {
                 if tray && app.tray_by_id("main").is_some() {
                     api.prevent_close();
                     let _ = w.hide();
+                    schedule_release(app);
                 } else {
                     app.exit(0);
                 }
@@ -763,6 +927,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             start_monitor,
+            ui_ready,
             log,
             bench_report,
             bench_cpu,
@@ -789,6 +954,13 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("failed to start Gestione attività")
         .run(|app, e| {
+            // the last window closed (the main one released, or the Ctrl+Alt+Del screen):
+            // with the system tray the app goes on, an explicit exit (app.exit) has a code
+            if let tauri::RunEvent::ExitRequested { code: None, api, .. } = &e {
+                if app.tray_by_id("main").is_some() {
+                    api.prevent_exit();
+                }
+            }
             // on exit, history still in memory must be written to disk
             if let tauri::RunEvent::Exit = e {
                 if let Ok(mut h) = app.state::<AppState>().history.lock() {

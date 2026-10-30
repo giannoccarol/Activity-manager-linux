@@ -1,5 +1,11 @@
 //! Real glass on Wayland: the compositor (KWin) blurs what lies behind the transparent window
 //! (standard ext-background-effect-v1 protocol). Everything runs on the GTK thread.
+//!
+//! The effect belongs to a wl_surface, and GTK destroys the surface whenever a window is hidden
+//! (a new one comes with the next show). An effect whose surface is gone must not be used again:
+//! set_blur_region on it is a protocol error (surface_destroyed) that closes the connection to the
+//! compositor, and with it the app. So the effect is released when the window is unmapped and
+//! created again for the new surface.
 use gtk::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -28,6 +34,8 @@ struct Blur {
     compositor: WlCompositor,
     _manager: Manager,
     effect: Effect,
+    win: gtk::ApplicationWindow,
+    unmap: Option<gtk::glib::SignalHandlerId>,
 }
 
 thread_local! {
@@ -58,11 +66,19 @@ fn attach(win: &gtk::ApplicationWindow) -> Result<Blur, String> {
         let manager: Manager = globals.bind(&qh, 1..=1, ()).map_err(|e| format!("ext_background_effect: {e:?}"))?;
         let compositor: WlCompositor = globals.bind(&qh, 1..=4, ()).map_err(|e| format!("compositor: {e:?}"))?;
         let effect = manager.get_background_effect(&surface, &qh, ());
-        Ok(Blur { conn, queue, compositor, _manager: manager, effect })
+        Ok(Blur { conn, queue, compositor, _manager: manager, effect, win: win.clone(), unmap: None })
     }
 }
 
 impl Blur {
+    fn release(mut self) {
+        if let Some(id) = self.unmap.take() {
+            self.win.disconnect(id);
+        }
+        self.effect.destroy();
+        let _ = self.conn.flush();
+    }
+
     /// Blurred area: rectangle with rounded corners, approximated with 1 px rows.
     fn set_region(&self, w: i32, h: i32, radius: i32) {
         let qh = self.queue.handle();
@@ -93,15 +109,17 @@ pub fn apply(label: &str, win: &gtk::ApplicationWindow, on: bool, radius: i32) {
         let mut map = b.borrow_mut();
         if !on {
             if let Some(x) = map.remove(label) {
-                x.effect.destroy();
-                let _ = x.conn.flush();
+                x.release();
                 win.queue_draw();
             }
             return;
         }
         if !map.contains_key(label) {
             match attach(win) {
-                Ok(x) => {
+                Ok(mut x) => {
+                    // hidden: its surface is about to go, the next show attaches to the new one
+                    let l = label.to_string();
+                    x.unmap = Some(win.connect_unmap(move |_| forget(&l)));
                     map.insert(label.to_string(), x);
                 }
                 Err(e) => {
@@ -117,4 +135,12 @@ pub fn apply(label: &str, win: &gtk::ApplicationWindow, on: bool, radius: i32) {
             win.queue_draw();
         }
     });
+}
+
+/// Releases the effect of a window being hidden or destroyed.
+fn forget(label: &str) {
+    let x = BLURS.with(|b| b.borrow_mut().remove(label));
+    if let Some(x) = x {
+        x.release();
+    }
 }

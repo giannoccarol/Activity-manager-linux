@@ -499,9 +499,11 @@
         "sentence": "{name} is using {size}, {share}% of RAM; {free} is still available."
       },
       "temp": {
-        "title": "CPU at {temp} °C",
-        "container": "Most of the heat comes from {name}, which is using {pct}% of the CPU. Pausing it will cool the CPU down within seconds.",
-        "other": "Most of the heat comes from {name}, which is using {pct}% of the CPU. Reducing its load will cool the CPU down."
+        "titleLimit": "CPU at its thermal limit, {temp} °C",
+        "titleMax": "CPU at {temp} °C, close to its maximum of {max} °C",
+        "cooling": "It happens even with little load: check that the fans are spinning and the air vents are not blocked.",
+        "container": "It is slowing itself down to stay cool. Most of the heat comes from {name}, which is using {pct}% of the CPU. Pausing it will cool the CPU down within seconds.",
+        "other": "It is slowing itself down to stay cool. Most of the heat comes from {name}, which is using {pct}% of the CPU. Reducing its load will cool the CPU down."
       },
       "cpu": {
         "title": "CPU at {pct}%",

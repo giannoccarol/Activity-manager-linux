@@ -146,6 +146,10 @@ pub struct Cpu {
     pub per_core: Vec<f64>,
     pub freq: f64,
     pub temp: Option<f64>,
+    /// where the CPU starts slowing itself down to stay cool (TjMax minus the firmware's TCC offset)
+    pub temp_limit: Option<f64>,
+    /// maximum temperature declared by the CPU (TjMax)
+    pub temp_max: Option<f64>,
     pub model: String,
 }
 

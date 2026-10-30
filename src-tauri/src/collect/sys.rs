@@ -40,6 +40,8 @@ pub struct Sys {
     wifi_t: Option<Instant>,
     temp_path: Option<String>,
     temp: Option<Smooth>,
+    temp_limit: Option<f64>,
+    temp_max: Option<f64>,
     pub model: String,
     page: u64,
 }
@@ -52,6 +54,20 @@ fn parse_cpu_line(l: &str) -> CpuT {
     let iowait = g(4);
     let total: u64 = v.iter().take(8).sum();
     CpuT { busy: total - idle - iowait, kernel: g(2) + g(5) + g(6), iowait, total }
+}
+
+/// The CPU's own limits for the sensor at `input`: maximum (TjMax, hwmon temp*_crit) and the point
+/// where it starts slowing itself down, TjMax minus the TCC offset the firmware sets on Intel
+/// (e.g. 110 - 10 = 100 °C). Running there under load is how current CPUs are designed to work.
+fn cpu_temp_limits(input: &str) -> (Option<f64>, Option<f64>) {
+    let max = read(input.replace("_input", "_crit")).and_then(|v| v.parse::<f64>().ok()).map(|v| v / 1000.0).filter(|c| *c > 50.0 && *c < 150.0);
+    let offset = std::fs::read_dir("/sys/bus/pci/devices")
+        .ok()
+        .and_then(|rd| rd.flatten().find_map(|e| read(e.path().join("tcc_offset_degree_celsius"))))
+        .and_then(|v| v.parse::<f64>().ok())
+        .filter(|o| (0.0..=63.0).contains(o))
+        .unwrap_or(0.0);
+    (max.map(|m| m - offset), max)
 }
 
 fn find_temp() -> Option<String> {
@@ -116,6 +132,8 @@ impl Sys {
             .replace("(TM)", "")
             .replace("  ", " ");
         let page = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as u64;
+        let temp_path = find_temp();
+        let (temp_limit, temp_max) = temp_path.as_deref().map(cpu_temp_limits).unwrap_or((None, None));
         Sys {
             prev_cpu: vec![],
             prev_disk: HashMap::new(),
@@ -125,8 +143,10 @@ impl Sys {
             disk_static_t: None,
             wifi: HashMap::new(),
             wifi_t: None,
-            temp_path: find_temp(),
+            temp_path,
             temp: None,
+            temp_limit,
+            temp_max,
             model,
             page: if page > 0 { page } else { 4096 },
         }
@@ -169,7 +189,7 @@ impl Sys {
                 v
             }
         });
-        Cpu { total, kernel, iowait, per_core: per, freq, temp, model: self.model.clone() }
+        Cpu { total, kernel, iowait, per_core: per, freq, temp, temp_limit: self.temp_limit, temp_max: self.temp_max, model: self.model.clone() }
     }
 
     pub fn mem(&mut self) -> Mem {

@@ -81,38 +81,52 @@ pub fn analyze(s: &Snapshot) -> Vec<Insight> {
         }
     }
     // ------------------------------------------------------------- CPU and temperature
-    let hot = s.cpu.temp.map(|t| t >= 95.0).unwrap_or(false);
-    if s.cpu.total >= 85.0 || hot {
-        let t = top(s, |g| g.cpu);
-        if let Some(g) = t.first() {
-            let others = t.iter().skip(1).take(2).map(|g| format!("{} {}%", g.label, num(g.cpu, 0))).collect();
-            if hot {
-                // a container can be paused, anything else can only be slowed down
-                let key = if g.section == Section::Ctr { "insights.temp.container" } else { "insights.temp.other" };
-                out.push(Insight {
-                    res: "temp".into(),
-                    level: "critical".into(),
-                    title: tf("insights.temp.title", &[("temp", pct(s.cpu.temp.unwrap_or(0.0)))]),
-                    sentence: tf(key, &[("name", g.label.clone()), ("pct", pct(g.cpu))]),
-                    culprit: Some(culprit(g)),
-                    others,
-                });
+    // Current CPUs boost until they reach their thermal limit (TCC, e.g. 100 °C) and then hold it:
+    // with a performance power profile that happens even with a light load, and it is by design.
+    // So the temperature is reported only near the declared maximum (cooling problem, notified),
+    // or at the limit while a substantial load explains it (the CPU is slowing down because of it).
+    let temp = s.cpu.temp.unwrap_or(0.0);
+    let limit = s.cpu.temp_limit.unwrap_or(95.0);
+    let danger = s.cpu.temp_max.map(|m| temp >= m - 3.0).unwrap_or(false);
+    let throttled = temp >= limit - 2.0 && s.cpu.total >= 40.0;
+    let tops = top(s, |g| g.cpu);
+    if danger || (throttled && s.cpu.total < 85.0) {
+        let others = tops.iter().skip(1).take(2).map(|g| format!("{} {}%", g.label, num(g.cpu, 0))).collect();
+        let title = match s.cpu.temp_max {
+            Some(m) if danger => tf("insights.temp.titleMax", &[("temp", pct(temp)), ("max", pct(m))]),
+            _ => tf("insights.temp.titleLimit", &[("temp", pct(temp))]),
+        };
+        let g = tops.first().filter(|_| s.cpu.total >= 40.0);
+        out.push(Insight {
+            res: "temp".into(),
+            level: if danger { "critical" } else { "warn" }.into(),
+            title,
+            // a container can be paused, anything else can only be slowed down
+            sentence: match g {
+                Some(g) if g.section == Section::Ctr => tf("insights.temp.container", &[("name", g.label.clone()), ("pct", pct(g.cpu))]),
+                Some(g) => tf("insights.temp.other", &[("name", g.label.clone()), ("pct", pct(g.cpu))]),
+                None => t("insights.temp.cooling"),
+            },
+            culprit: g.map(|g| culprit(g)),
+            others: if g.is_some() { others } else { vec![] },
+        });
+    } else if s.cpu.total >= 85.0 {
+        if let Some(g) = tops.first() {
+            let others = tops.iter().skip(1).take(2).map(|g| format!("{} {}%", g.label, num(g.cpu, 0))).collect();
+            let share = g.cpu / s.cpu.total.max(1.0) * 100.0;
+            let sentence = if share < 20.0 {
+                tf("insights.cpu.spread", &[("name", g.label.clone()), ("pct", pct(g.cpu))])
             } else {
-                let share = g.cpu / s.cpu.total.max(1.0) * 100.0;
-                let sentence = if share < 20.0 {
-                    tf("insights.cpu.spread", &[("name", g.label.clone()), ("pct", pct(g.cpu))])
-                } else {
-                    tf("insights.cpu.top", &[("name", g.label.clone()), ("pct", pct(g.cpu)), ("share", pct(share))])
-                };
-                out.push(Insight {
-                    res: "cpu".into(),
-                    level: if s.cpu.total >= 95.0 { "critical" } else { "warn" }.into(),
-                    title: tf("insights.cpu.title", &[("pct", pct(s.cpu.total))]),
-                    sentence,
-                    culprit: Some(culprit(g)),
-                    others,
-                });
-            }
+                tf("insights.cpu.top", &[("name", g.label.clone()), ("pct", pct(g.cpu)), ("share", pct(share))])
+            };
+            out.push(Insight {
+                res: "cpu".into(),
+                level: if s.cpu.total >= 95.0 { "critical" } else { "warn" }.into(),
+                title: tf("insights.cpu.title", &[("pct", pct(s.cpu.total))]),
+                sentence,
+                culprit: Some(culprit(g)),
+                others,
+            });
         }
     }
     // ------------------------------------------------------------- GPU

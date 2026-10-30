@@ -84,11 +84,13 @@ Activity Manager puts everything into a familiar window, reads the data straight
 
 Measured on the installed app, refreshing every second:
 
-| | CPU usage (Intel Core Ultra 7 155H) |
-|---|---|
-| Window open and focused, with animations | about 20% of one core |
-| Window open, not focused | about 10% |
-| Hidden in the system tray | less than 1% |
+| | CPU usage (Intel Core Ultra 7 155H) | Memory (private) |
+|---|---|---|
+| Window open and focused, with animations | about 20% of one core | about 200 MB, mostly the web view |
+| Window open, not focused | about 10% | about 200 MB |
+| Hidden in the system tray | less than 1% | about 20 MB |
+
+The window's web view (WebKit) is created when the window opens and released a minute after it goes to the tray: reopening within that minute is instant, later it takes about half a second.
 
 ## Screenshots
 
@@ -210,10 +212,11 @@ With the AUR package, run `gestione-attivita --remove-shortcuts` as your user fi
 
 - **No extra services**: the app reads the kernel files directly; no privileged daemon is needed.
 - **Grouping by app**: every process is traced back to its systemd unit (`app-…scope`, `….service`, `docker-….scope`), then to its `.desktop` file for name and icon.
-- **Diagnosis**: for the disk it compares cgroup I/O with the device; for temperature it looks at who is using the CPU; for memory it also considers swap activity.
+- **Diagnosis**: for the disk it compares cgroup I/O with the device; for memory it also considers swap activity; for temperature it uses the CPU's own limits (TjMax and the firmware's TCC offset). Current CPUs boost until they reach that limit, so heat is reported only when a real load explains it, or when the CPU gets close to its maximum.
 - **Lightweight**:
   - fields that do not change (name, command line, icon) reach the interface only once;
   - while the window is hidden, sampling slows down to once every 3 seconds;
+  - the window and its web view exist only while needed: they are released a minute after the window is hidden in the tray;
   - long tables only render the visible rows;
   - there are no infinite animations, because with the Glass theme KWin would recompute the blur on every frame.
 - **Wayland**: the Ctrl+Alt+Del screen goes full screen on every monitor through GTK; the blur uses `ext-background-effect-v1`; the activation token (`XDG_ACTIVATION_TOKEN`) is passed from the new instance to the one already running.

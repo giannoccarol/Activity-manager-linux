@@ -143,6 +143,8 @@ export function mockSnapshot(offset?: number): Snapshot {
       perCore: Array.from({ length: 22 }, (_, i) => Math.min(100, walk(`core${i}`, cpuTotal * (0.6 + (i % 5) * 0.2)))),
       freq: 2400 + Math.random() * 600,
       temp,
+      tempLimit: 100,
+      tempMax: 110,
       model: "Intel Core Ultra 7 155H",
     },
     mem: { total: memTotal, used: memUsed, available: memTotal - memUsed, pct: (memUsed / memTotal) * 100, swapUsed: 4.4 * GiB, swapTotal: 30.8 * GiB, cached: 7.2 * GiB },

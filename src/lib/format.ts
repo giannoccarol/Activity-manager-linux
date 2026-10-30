@@ -2,6 +2,9 @@
 import { i18n, t } from "./i18n.svelte";
 
 const cache = new Map<string, Intl.NumberFormat>();
+
+/** CPU at the point where it slows itself down to stay cool (its own limit, not a fixed value). */
+export const cpuAtLimit = (c: { temp: number | null; tempLimit: number | null }) => c.temp !== null && c.temp >= (c.tempLimit ?? 95) - 2;
 export function num(v: number, d = 1): string {
   const tag = i18n.tag;
   const k = `${tag}:${d}`;
